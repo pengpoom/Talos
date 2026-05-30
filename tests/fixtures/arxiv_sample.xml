@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/2401.00001v1</id>
+    <title>A Sample Paper on Robotic Manipulation</title>
+    <summary>We present a method for robotic manipulation using LLMs.</summary>
+    <published>2024-01-01T00:00:00Z</published>
+    <author><name>Alice Smith</name></author>
+    <author><name>Bob Jones</name></author>
+    <link href="http://arxiv.org/abs/2401.00001v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00002v1</id>
+    <title>Model Predictive Control for Quadrotors</title>
+    <summary>An MPC approach for agile quadrotor flight.</summary>
+    <published>2024-01-02T00:00:00Z</published>
+    <author><name>Carol White</name></author>
+    <link href="http://arxiv.org/abs/2401.00002v1" rel="alternate" type="text/html"/>
+  </entry>
+</feed>

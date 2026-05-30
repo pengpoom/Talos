@@ -1,0 +1,6 @@
+{
+  "schedule": "0 9 * * *",
+  "skill": "arxiv-digest",
+  "deliver": "feishu",
+  "prompt": "运行 arxiv-digest 技能：抓取今天的 arXiv 新论文，狠筛 3-5 篇，写成日报推送给我。"
+}
