@@ -1,0 +1,27 @@
+timezone: Asia/Shanghai
+name: 你的名字
+
+arxiv:
+  categories: [cs.RO, cs.LG, cs.CL, eess.SY]
+  keywords: ["robotic manipulation", "LLM agent", "model predictive control"]
+  max_per_day: 5
+  # source: arxiv   # 预留：以后可加 pubmed / biorxiv
+
+schedule:            # Plan 1 只用到 paper_digest；其余给 Plan 2 用
+  morning_plan:    "08:30"
+  paper_digest:    "09:00"
+  open_loop_check: ["14:00", "18:00"]
+  evening_review:  "22:00"
+
+style:
+  proactivity: high          # high | medium | low
+  accountability: gentle     # gentle | firm | tough | savage
+  tone: warm
+  celebrate_wins: true
+
+features:
+  morning_plan:      true
+  paper_digest:      true
+  focus_buddy:       true
+  open_loop_tracker: true
+  evening_review:    true
