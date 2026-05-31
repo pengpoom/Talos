@@ -29,6 +29,14 @@ pip install -e ".[dev]" && pytest -q
 3. 预期：飞书 home chat 收到 3–5 篇精选日报；`~/.hermes/research/state/papers/` 出现当天 `digest-*.md`，`seen.jsonl` 增长。
 4. 再触发一次：之前推过的不再出现（去重生效）。
 
+## 日循环（Plan 2）
+装好后，每天会自动：
+- **08:30 晨间规划** —— 帮你定 1-3 件、拆到下一步，写进 today.json
+- **22:00 晚间复盘** —— 复盘今天、记时间轴、把没做完的转入开放循环
+
+手动触发体验：在飞书说"帮我规划下今天" / "复盘下今天"。
+状态文件在 `~/.hermes/research/state/`：`today.json`、`open_loops.json`、`timeline/<date>.md`。
+
 ## 目录
 - `src/research_assistant/` — 机械活 Python 包（含单测）
 - `pack/` — 可分发的包（SOUL 人设 / 技能 / 配置模板 / cron 模板）
