@@ -1,6 +1,20 @@
-{
-  "schedule": "0 9 * * *",
-  "skill": "arxiv-digest",
-  "deliver": "feishu",
-  "prompt": "运行 arxiv-digest 技能：抓取今天的 arXiv 新论文，狠筛 3-5 篇，写成日报推送给我。"
-}
+[
+  {
+    "schedule": "0 9 * * *",
+    "skill": "arxiv-digest",
+    "deliver": "feishu",
+    "prompt": "运行 arxiv-digest 技能：抓取今天的 arXiv 新论文，狠筛 3-5 篇，写成日报推送给我。"
+  },
+  {
+    "schedule": "30 8 * * *",
+    "skill": "morning-plan",
+    "deliver": "feishu",
+    "prompt": "运行 morning-plan 技能：帮我定今天 1-3 件聚焦任务，拆到下一步。"
+  },
+  {
+    "schedule": "0 22 * * *",
+    "skill": "evening-review",
+    "deliver": "feishu",
+    "prompt": "运行 evening-review 技能：带我复盘今天、记时间轴、把没做完的记下来。"
+  }
+]

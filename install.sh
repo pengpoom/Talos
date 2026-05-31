@@ -6,7 +6,18 @@ HERMES="${HERMES_HOME:-$HOME/.hermes}"
 RESEARCH="$HERMES/research"
 
 echo "==> 安装 Python 包"
-pip install -e "$REPO"
+PIP="${PIP:-}"
+if [ -z "$PIP" ]; then
+  if command -v pip  >/dev/null 2>&1; then PIP="pip"
+  elif command -v pip3 >/dev/null 2>&1; then PIP="pip3"
+  elif python3 -m pip --version >/dev/null 2>&1; then PIP="python3 -m pip"
+  else
+    echo "    找不到 pip。先装 Python 3（macOS：brew install python），或用 PIP=... 指定。" >&2
+    exit 1
+  fi
+fi
+echo "    用 $PIP"
+$PIP install -e "$REPO"
 
 echo "==> 建目录"
 mkdir -p "$RESEARCH/state/papers" "$RESEARCH/state/timeline" \
@@ -21,7 +32,7 @@ else
 fi
 
 echo "==> 安装技能"
-cp -r "$REPO/pack/skills/research/arxiv-digest" "$HERMES/skills/research/"
+cp -r "$REPO/pack/skills/research/." "$HERMES/skills/research/"
 
 echo "==> 合并 SOUL 人设（幂等）"
 SOUL="$HERMES/SOUL.md"
@@ -45,8 +56,10 @@ fi
 
 echo
 echo "==> 还差最后一步：注册定时任务（cron 的确切 CLI 参数因 Hermes 版本而异）"
-echo "    方式 A（推荐，自然语言）：在飞书直接对 Hermes 说："
-echo '      "每天早上 9 点跑 arxiv-digest 技能，结果发飞书"'
+echo "    方式 A（推荐，自然语言）：在飞书对 Hermes 说（逐条）："
+echo '      "每天早上9点跑 arxiv-digest 技能，结果发飞书"'
+echo '      "每天早上8点半跑 morning-plan 技能，结果发飞书"'
+echo '      "每天晚上10点跑 evening-review 技能，结果发飞书"'
 echo "    方式 B（命令行）：参考 \`hermes cron --help\`，按 pack/cron/jobs.snippet.json 注册"
 echo
 echo "完成。先 \`research-assistant fetch\` 自测，再用 cron 跑一次端到端。"
