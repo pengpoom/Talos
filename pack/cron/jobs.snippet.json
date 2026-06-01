@@ -16,5 +16,17 @@
     "skill": "evening-review",
     "deliver": "feishu",
     "prompt": "运行 evening-review 技能：带我复盘今天、记时间轴、把没做完的记下来。"
+  },
+  {
+    "schedule": "0 14 * * *",
+    "skill": "open-loop-tracker",
+    "deliver": "feishu",
+    "prompt": "运行 open-loop-tracker 技能：看有没有该跟进的开放循环，挑最要紧的提醒我；没有就别打扰。"
+  },
+  {
+    "schedule": "0 18 * * *",
+    "skill": "open-loop-tracker",
+    "deliver": "feishu",
+    "prompt": "运行 open-loop-tracker 技能：傍晚再巡一次开放循环，没有就安静。"
   }
 ]

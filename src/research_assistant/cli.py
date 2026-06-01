@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import config, state, arxiv, daily
+from . import config, state, arxiv, daily, focus
 
 
 def cmd_fetch(args) -> int:
@@ -91,6 +91,63 @@ def cmd_timeline_append(args) -> int:
     return 0
 
 
+def cmd_loops_due(args) -> int:
+    due = daily.due_for_nudge(daily.load_loops(), state.today_str(args.tz),
+                              cadence_days=args.cadence)
+    print(json.dumps(due, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_loops_nudge(args) -> int:
+    loops = daily.load_loops()
+    try:
+        daily.update_loop(loops, args.id, nudged_date=state.today_str(args.tz))
+    except KeyError:
+        print(f"no such loop: {args.id}", file=sys.stderr)
+        return 1
+    daily.save_loops(loops)
+    return 0
+
+
+def cmd_loops_resolve(args) -> int:
+    loops = daily.load_loops()
+    try:
+        daily.update_loop(loops, args.id, status=args.status)
+    except KeyError:
+        print(f"no such loop: {args.id}", file=sys.stderr)
+        return 1
+    daily.save_loops(loops)
+    return 0
+
+
+def cmd_focus_start(args) -> int:
+    focus.start_focus(args.task, started=state.now_iso(args.tz), planned_min=args.minutes)
+    return 0
+
+
+def cmd_focus_status(args) -> int:
+    sess = focus.load_focus()
+    if not sess or not sess.get("active"):
+        print(json.dumps({"active": False}, ensure_ascii=False))
+        return 0
+    sess = dict(sess)
+    sess["elapsed_min"] = focus.elapsed_minutes(sess["started"], state.now_iso(args.tz))
+    print(json.dumps(sess, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_focus_end(args) -> int:
+    try:
+        sess = focus.end_focus(ended=state.now_iso(args.tz))
+    except RuntimeError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    sess = dict(sess)
+    sess["elapsed_min"] = focus.elapsed_minutes(sess["started"], sess["ended"])
+    print(json.dumps(sess, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="research-assistant")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -148,6 +205,35 @@ def main(argv=None) -> int:
     pta.add_argument("--date", default=None)
     pta.add_argument("--text", required=True)
     pta.set_defaults(func=cmd_timeline_append)
+
+    pld = sub.add_parser("loops-due", help="列出该跟进（巡检）的开放循环")
+    pld.add_argument("--tz", default="UTC")
+    pld.add_argument("--cadence", type=int, default=1)
+    pld.set_defaults(func=cmd_loops_due)
+
+    pln = sub.add_parser("loops-nudge", help="标记某开放循环今天已提醒")
+    pln.add_argument("--tz", default="UTC")
+    pln.add_argument("--id", required=True)
+    pln.set_defaults(func=cmd_loops_nudge)
+
+    plr = sub.add_parser("loops-resolve", help="关闭开放循环")
+    plr.add_argument("--id", required=True)
+    plr.add_argument("--status", required=True, choices=["done", "dropped"])
+    plr.set_defaults(func=cmd_loops_resolve)
+
+    pfs = sub.add_parser("focus-start", help="开始一次专注会话")
+    pfs.add_argument("--tz", default="UTC")
+    pfs.add_argument("--task", required=True)
+    pfs.add_argument("--minutes", type=int, default=None)
+    pfs.set_defaults(func=cmd_focus_start)
+
+    pfst = sub.add_parser("focus-status", help="查看当前专注会话与已用时长")
+    pfst.add_argument("--tz", default="UTC")
+    pfst.set_defaults(func=cmd_focus_status)
+
+    pfe = sub.add_parser("focus-end", help="结束当前专注会话")
+    pfe.add_argument("--tz", default="UTC")
+    pfe.set_defaults(func=cmd_focus_end)
 
     args = parser.parse_args(argv)
     return args.func(args)

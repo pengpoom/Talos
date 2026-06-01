@@ -1,6 +1,6 @@
 # Hermes 科研搭子
 
-在 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 之上的科研助手。Plan 1：基础设施 + arXiv 论文日报。
+在 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 之上的科研搭子：arXiv 论文日报 + 日循环（晨间规划 / 晚间复盘）+ 开放循环巡检 + 专注陪伴。
 
 ## 前置
 - 已跑起来的 Hermes（飞书 gateway 能对话）。
@@ -9,7 +9,7 @@
 
 ## 安装
 ```
-git clone <this-repo> && cd hermes-poss
+git clone https://github.com/pengpoom/Talos.git && cd Talos
 bash install.sh
 ```
 然后编辑 `~/.hermes/research/prefs.yaml`，填上你真实的 `arxiv.categories` 与 `keywords`。
@@ -36,6 +36,12 @@ pip install -e ".[dev]" && pytest -q
 
 手动触发体验：在飞书说"帮我规划下今天" / "复盘下今天"。
 状态文件在 `~/.hermes/research/state/`：`today.json`、`open_loops.json`、`timeline/<date>.md`。
+
+## 巡检 + 专注（Plan 3）
+- **14:00 / 18:00 开放循环巡检** —— 挑该跟进的开放循环提醒你；没有就不打扰，提醒过的当天不重复。
+- **专注陪伴（按需）** —— 在飞书说"陪我专注 30 分钟写 intro"，开一次 body-doubling 会话，陪你开始、结束时收尾（可记进时间轴）。
+
+新增状态文件：`focus.json`（当前专注会话）。
 
 ## 目录
 - `src/research_assistant/` — 机械活 Python 包（含单测）

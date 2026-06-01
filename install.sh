@@ -59,7 +59,9 @@ echo "==> 还差最后一步：注册定时任务（cron 的确切 CLI 参数因
 echo "    方式 A（推荐，自然语言）：在飞书对 Hermes 说（逐条）："
 echo '      "每天早上9点跑 arxiv-digest 技能，结果发飞书"'
 echo '      "每天早上8点半跑 morning-plan 技能，结果发飞书"'
+echo '      "每天下午2点和6点跑 open-loop-tracker 技能，结果发飞书"'
 echo '      "每天晚上10点跑 evening-review 技能，结果发飞书"'
+echo "    （focus-buddy 是按需的：在飞书说「陪我专注」即可，无需 cron）"
 echo "    方式 B（命令行）：参考 \`hermes cron --help\`，按 pack/cron/jobs.snippet.json 注册"
 echo
 echo "完成。先 \`research-assistant fetch\` 自测，再用 cron 跑一次端到端。"
