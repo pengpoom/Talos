@@ -13,3 +13,6 @@ venv/
 
 # 运行时产物
 *.corrupt
+
+# 个人设计草稿（不进开源库）
+pro-Talos.md

@@ -38,6 +38,7 @@ def cmd_today_set_plan(args) -> int:
     today = daily.load_today(args.tz)
     daily.set_plan(today, items)
     daily.save_today(today)
+    print(json.dumps(today, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -49,6 +50,7 @@ def cmd_today_mark_done(args) -> int:
         print(f"no such plan item: {args.id}", file=sys.stderr)
         return 1
     daily.save_today(today)
+    print(json.dumps(today, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -56,6 +58,7 @@ def cmd_today_add_unplanned(args) -> int:
     today = daily.load_today(args.tz)
     daily.add_unplanned(today, args.text)
     daily.save_today(today)
+    print(json.dumps(today, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -63,6 +66,7 @@ def cmd_today_log(args) -> int:
     today = daily.load_today(args.tz)
     daily.mark_logged(today)
     daily.save_today(today)
+    print(json.dumps(today, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -79,15 +83,17 @@ def cmd_loops_list(args) -> int:
 
 def cmd_loops_add(args) -> int:
     loops = daily.load_loops()
-    daily.add_loop(loops, args.desc, source=args.source,
-                   created=state.today_str(args.tz), due=args.due)
+    loop = daily.add_loop(loops, args.desc, source=args.source,
+                          created=state.today_str(args.tz), due=args.due)
     daily.save_loops(loops)
+    print(json.dumps(loop, ensure_ascii=False, indent=2))
     return 0
 
 
 def cmd_timeline_append(args) -> int:
     date = args.date or state.today_str(args.tz)
     daily.append_timeline(date, args.text)
+    print(json.dumps({"date": date, "appended": args.text}, ensure_ascii=False))
     return 0
 
 
@@ -101,27 +107,30 @@ def cmd_loops_due(args) -> int:
 def cmd_loops_nudge(args) -> int:
     loops = daily.load_loops()
     try:
-        daily.update_loop(loops, args.id, nudged_date=state.today_str(args.tz))
+        loop = daily.update_loop(loops, args.id, nudged_date=state.today_str(args.tz))
     except KeyError:
         print(f"no such loop: {args.id}", file=sys.stderr)
         return 1
     daily.save_loops(loops)
+    print(json.dumps(loop, ensure_ascii=False, indent=2))
     return 0
 
 
 def cmd_loops_resolve(args) -> int:
     loops = daily.load_loops()
     try:
-        daily.update_loop(loops, args.id, status=args.status)
+        loop = daily.update_loop(loops, args.id, status=args.status)
     except KeyError:
         print(f"no such loop: {args.id}", file=sys.stderr)
         return 1
     daily.save_loops(loops)
+    print(json.dumps(loop, ensure_ascii=False, indent=2))
     return 0
 
 
 def cmd_focus_start(args) -> int:
-    focus.start_focus(args.task, started=state.now_iso(args.tz), planned_min=args.minutes)
+    sess = focus.start_focus(args.task, started=state.now_iso(args.tz), planned_min=args.minutes)
+    print(json.dumps(sess, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -162,9 +171,17 @@ def cmd_focus_stats(args) -> int:
     return 0
 
 
+def _default_tz() -> str:
+    try:
+        return config.load_prefs(state.research_home() / "prefs.yaml").timezone
+    except Exception:
+        return "UTC"
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="research-assistant")
     sub = parser.add_subparsers(dest="cmd", required=True)
+    tzd = _default_tz()
 
     pf = sub.add_parser("fetch", help="抓取并打印去重后的候选论文 JSON")
     pf.add_argument("--prefs", default=str(Path.home() / ".hermes" / "research" / "prefs.yaml"))
@@ -178,55 +195,55 @@ def main(argv=None) -> int:
     pc.set_defaults(func=cmd_commit)
 
     pts = sub.add_parser("today-show")
-    pts.add_argument("--tz", default="UTC")
+    pts.add_argument("--tz", default=tzd)
     pts.set_defaults(func=cmd_today_show)
 
     psp = sub.add_parser("today-set-plan")
-    psp.add_argument("--tz", default="UTC")
+    psp.add_argument("--tz", default=tzd)
     psp.add_argument("--json", required=True, help="[{task, next_action}] 的 JSON")
     psp.set_defaults(func=cmd_today_set_plan)
 
     pmd = sub.add_parser("today-mark-done")
-    pmd.add_argument("--tz", default="UTC")
+    pmd.add_argument("--tz", default=tzd)
     pmd.add_argument("--id", required=True)
     pmd.set_defaults(func=cmd_today_mark_done)
 
     pau = sub.add_parser("today-add-unplanned")
-    pau.add_argument("--tz", default="UTC")
+    pau.add_argument("--tz", default=tzd)
     pau.add_argument("--text", required=True)
     pau.set_defaults(func=cmd_today_add_unplanned)
 
     plog = sub.add_parser("today-log")
-    plog.add_argument("--tz", default="UTC")
+    plog.add_argument("--tz", default=tzd)
     plog.set_defaults(func=cmd_today_log)
 
     pro = sub.add_parser("today-rollover")
-    pro.add_argument("--tz", default="UTC")
+    pro.add_argument("--tz", default=tzd)
     pro.set_defaults(func=cmd_today_rollover)
 
     pll = sub.add_parser("loops-list")
     pll.set_defaults(func=cmd_loops_list)
 
     pla = sub.add_parser("loops-add")
-    pla.add_argument("--tz", default="UTC")
+    pla.add_argument("--tz", default=tzd)
     pla.add_argument("--desc", required=True)
     pla.add_argument("--source", required=True)
     pla.add_argument("--due", default=None)
     pla.set_defaults(func=cmd_loops_add)
 
     pta = sub.add_parser("timeline-append")
-    pta.add_argument("--tz", default="UTC")
+    pta.add_argument("--tz", default=tzd)
     pta.add_argument("--date", default=None)
     pta.add_argument("--text", required=True)
     pta.set_defaults(func=cmd_timeline_append)
 
     pld = sub.add_parser("loops-due", help="列出该跟进（巡检）的开放循环")
-    pld.add_argument("--tz", default="UTC")
+    pld.add_argument("--tz", default=tzd)
     pld.add_argument("--cadence", type=int, default=1)
     pld.set_defaults(func=cmd_loops_due)
 
     pln = sub.add_parser("loops-nudge", help="标记某开放循环今天已提醒")
-    pln.add_argument("--tz", default="UTC")
+    pln.add_argument("--tz", default=tzd)
     pln.add_argument("--id", required=True)
     pln.set_defaults(func=cmd_loops_nudge)
 
@@ -236,17 +253,17 @@ def main(argv=None) -> int:
     plr.set_defaults(func=cmd_loops_resolve)
 
     pfs = sub.add_parser("focus-start", help="开始一次专注会话")
-    pfs.add_argument("--tz", default="UTC")
+    pfs.add_argument("--tz", default=tzd)
     pfs.add_argument("--task", required=True)
     pfs.add_argument("--minutes", type=int, default=None)
     pfs.set_defaults(func=cmd_focus_start)
 
     pfst = sub.add_parser("focus-status", help="查看当前专注会话与已用时长")
-    pfst.add_argument("--tz", default="UTC")
+    pfst.add_argument("--tz", default=tzd)
     pfst.set_defaults(func=cmd_focus_status)
 
     pfe = sub.add_parser("focus-end", help="结束当前专注会话")
-    pfe.add_argument("--tz", default="UTC")
+    pfe.add_argument("--tz", default=tzd)
     pfe.set_defaults(func=cmd_focus_end)
 
     pflog = sub.add_parser("focus-log", help="列出最近的专注记录")

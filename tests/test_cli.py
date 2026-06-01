@@ -127,6 +127,7 @@ def test_loops_resolve_closes(tmp_path, monkeypatch):
 def test_focus_start_status_end(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
     assert cli.main(["focus-start", "--tz", "UTC", "--task", "写 intro", "--minutes", "30"]) == 0
+    capsys.readouterr()
     assert cli.main(["focus-status", "--tz", "UTC"]) == 0
     st = json.loads(capsys.readouterr().out)
     assert st["task"] == "写 intro" and "elapsed_min" in st

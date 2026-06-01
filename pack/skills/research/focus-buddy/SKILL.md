@@ -1,6 +1,6 @@
 ---
 name: focus-buddy
-description: 按需 body-doubling，陪用户开一次专注会话、到点提醒、收尾入账。用户主动触发，不进固定 cron。
+description: 用户说"陪我专注 / 盯着我做 X / body double / 开一会专注"时用。必须用 research-assistant focus-start/focus-status/focus-end 开真实专注会话并落库（focus.json + 历史 + 时间轴），别用飞书原生提醒代替会话本身。按需触发，不进固定 cron。
 version: 1.1.0
 platforms: [linux, macos]
 metadata:
