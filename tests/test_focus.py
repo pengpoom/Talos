@@ -37,3 +37,36 @@ def test_end_focus_without_active_raises(tmp_path, monkeypatch):
 def test_elapsed_minutes():
     assert focus.elapsed_minutes("2026-06-01T14:00", "2026-06-01T14:45") == 45
     assert focus.elapsed_minutes("2026-06-01T14:00", "2026-06-01T15:30") == 90
+
+
+# --- 历史存档 ---
+
+def test_end_focus_appends_to_log_with_elapsed(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    focus.start_focus("写 intro", started="2026-06-01T14:00", planned_min=25)
+    sess = focus.end_focus(ended="2026-06-01T14:25")
+    assert sess["elapsed_min"] == 25
+    log = focus.load_focus_log()
+    assert len(log) == 1
+    assert log[0]["task"] == "写 intro" and log[0]["elapsed_min"] == 25
+    assert log[0]["ended"] == "2026-06-01T14:25"
+
+
+def test_focus_log_accumulates(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    focus.start_focus("a", started="2026-06-01T09:00", planned_min=20)
+    focus.end_focus(ended="2026-06-01T09:20")
+    focus.start_focus("b", started="2026-06-01T10:00", planned_min=30)
+    focus.end_focus(ended="2026-06-01T10:30")
+    assert [r["task"] for r in focus.load_focus_log()] == ["a", "b"]
+
+
+def test_focus_stats_totals_and_since(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    focus.start_focus("a", started="2026-05-30T09:00")
+    focus.end_focus(ended="2026-05-30T09:20")
+    focus.start_focus("b", started="2026-06-01T10:00")
+    focus.end_focus(ended="2026-06-01T10:30")
+    log = focus.load_focus_log()
+    assert focus.focus_stats(log) == {"count": 2, "total_min": 50}
+    assert focus.focus_stats(log, since="2026-06-01") == {"count": 1, "total_min": 30}

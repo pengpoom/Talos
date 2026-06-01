@@ -142,9 +142,23 @@ def cmd_focus_end(args) -> int:
     except RuntimeError as e:
         print(str(e), file=sys.stderr)
         return 1
-    sess = dict(sess)
-    sess["elapsed_min"] = focus.elapsed_minutes(sess["started"], sess["ended"])
+    date, sh = sess["started"].split("T")
+    eh = sess["ended"].split("T")[1]
+    daily.append_timeline(date, f"{sh}-{eh} 专注 {sess['task']}（{sess['elapsed_min']}min）✅")
     print(json.dumps(sess, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_focus_log(args) -> int:
+    log = focus.load_focus_log()
+    items = log[-args.limit:] if args.limit else log
+    print(json.dumps(items, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_focus_stats(args) -> int:
+    stats = focus.focus_stats(focus.load_focus_log(), since=args.since)
+    print(json.dumps(stats, ensure_ascii=False))
     return 0
 
 
@@ -234,6 +248,14 @@ def main(argv=None) -> int:
     pfe = sub.add_parser("focus-end", help="结束当前专注会话")
     pfe.add_argument("--tz", default="UTC")
     pfe.set_defaults(func=cmd_focus_end)
+
+    pflog = sub.add_parser("focus-log", help="列出最近的专注记录")
+    pflog.add_argument("--limit", type=int, default=10)
+    pflog.set_defaults(func=cmd_focus_log)
+
+    pfstat = sub.add_parser("focus-stats", help="专注累计统计（可 --since YYYY-MM-DD）")
+    pfstat.add_argument("--since", default=None)
+    pfstat.set_defaults(func=cmd_focus_stats)
 
     args = parser.parse_args(argv)
     return args.func(args)
