@@ -139,3 +139,27 @@ def test_focus_start_status_end(tmp_path, monkeypatch, capsys):
 def test_focus_end_without_session_returns_1(tmp_path, monkeypatch):
     monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
     assert cli.main(["focus-end", "--tz", "UTC"]) == 1
+
+
+def test_focus_end_writes_log_and_timeline(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    cli.main(["focus-start", "--tz", "UTC", "--task", "写 intro", "--minutes", "25"])
+    capsys.readouterr()
+    assert cli.main(["focus-end", "--tz", "UTC"]) == 0
+    from research_assistant import focus, state
+    log = focus.load_focus_log()
+    assert len(log) == 1 and log[0]["task"] == "写 intro"
+    tl = daily.timeline_path(state.today_str("UTC")).read_text(encoding="utf-8")
+    assert "专注 写 intro" in tl
+
+
+def test_focus_log_and_stats(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    cli.main(["focus-start", "--tz", "UTC", "--task", "a", "--minutes", "20"])
+    cli.main(["focus-end", "--tz", "UTC"])
+    capsys.readouterr()
+    assert cli.main(["focus-log"]) == 0
+    items = json.loads(capsys.readouterr().out)
+    assert items[0]["task"] == "a"
+    assert cli.main(["focus-stats"]) == 0
+    assert json.loads(capsys.readouterr().out)["count"] == 1
