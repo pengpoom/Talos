@@ -1,7 +1,7 @@
 ---
 name: morning-plan
-description: 每天早上帮用户定 1-3 件聚焦任务，拆到下一个最小动作，写进 today.json 并推送飞书。cron 触发。
-version: 1.0.0
+description: 每天早上的规划仪式：浮出悬着的开放循环，帮用户定 1-3 件今日聚焦，确认后写进飞书 Todo（不写 today.json）。cron 触发或用户说"帮我规划今天"。
+version: 2.0.0
 platforms: [linux, macos]
 metadata:
   hermes:
@@ -10,40 +10,33 @@ metadata:
 ---
 
 ## When to Use
-- cron 每天早晨触发（默认 08:30）。
+- cron 每个工作日早晨触发。
 - 用户主动说"帮我规划下今天 / 今天干啥"。
 
 ## Procedure
 
-1. **结转昨天没做完的**：运行
+1. **浮出悬着的事**（给今天当背景，不是直接塞成任务）：
    ```
-   research-assistant today-rollover --tz <prefs.timezone>
+   research-assistant loops-due --tz <prefs.timezone>
    ```
-   输出是被结转进开放循环的未完成项（JSON 列表，可能为空）。
+   （也可 `research-assistant loops-list` 看全部 open）。挑出今天值得推进的。
 
-2. **看悬着的事**：运行
-   ```
-   research-assistant loops-list
-   ```
-   得到 open_loops（含刚结转的 + 以前攒的）。挑出今天值得推进的。
-
-3. **提建议（判断活）**：读 `~/.hermes/research/prefs.yaml` 的 `style`。
-   - 给用户摆 **1-3 件**今天最该做的（别贪多，ADHD 友好）。
-   - 每件**拆到"下一个最小动作"**（不是"写论文"，是"打开 overleaf 写 intro 第一句"）。
+2. **提建议（判断活）**：读 `~/.hermes/research/prefs.yaml` 的 `style`。
+   - 给 **1-3 件**今天最该做的（别贪多，ADHD 友好），每件**拆到"下一个最小动作"**（不是"写论文"，是"打开 overleaf 写 intro 第一句"）。
    - 语气按 `style.accountability` 档位（gentle…savage）。
 
-4. **等用户拍板**：把建议发出去（cron 会经飞书 deliver 给用户）。用户确认 / 改动后，把最终计划写入：
-   ```
-   research-assistant today-set-plan --tz <prefs.timezone> --json '[{"task":"...","next_action":"..."}, ...]'
-   ```
+3. **写进飞书 Todo（状态以飞书为准，用户 App 里看得见）**：用 `lark-task` 技能把确认后的 1-3 件建成飞书 Todo（载入 lark-task 看具体命令）。约定见 `feishu-personal-productivity-workflows`：单一清单 `Todo`、当天 `YYYY-MM-DD` 分区、最重要的标 `【今天唯一重点】`、start/due 默认今天、分配给当前登录用户。
+   - **cron / 主动场景**：先把"今天聚焦 X 件 + 悬着的事"发出去，并问"要我加进飞书 Todo 吗？"，**等用户确认再建**——不要不打招呼就往飞书 Todo 写。
+   - 用户当面确认 / 口述后再建任务。
 
-5. （可选增强）若已接 `feishucli`：把每件 task 建成飞书任务 / 在日历占块。见仓库 README「可选增强」。
+4. **不要再写 `today.json`**（已退役，今日计划状态以飞书 Todo 为准）。
 
 ## Pitfalls
 - 1-3 件是上限，别摆一长串。
-- `--json` 必须是合法 JSON 数组；task 必填、next_action 尽量给。
-- 结转/读 loops 失败不致命：照常让用户口述今天计划，再 set-plan。
+- cron 场景别擅自往飞书 Todo 写——先提议、用户确认再落（外发/写入要可预览）。
+- 浮出 loops 只是当背景，别把所有 open loop 一股脑塞成今日任务。
+- `loops-due` 失败不致命：照常让用户口述今天计划，再建飞书 Todo。
 
 ## Verification
-- 干跑：`research-assistant today-rollover` 与 `loops-list` 能跑。
-- 端到端：触发后飞书收到"今天聚焦 X 件"，确认后 `today.json` 的 `plan` 被写入。
+- 干跑：`research-assistant loops-due` 能跑。
+- 端到端：触发后飞书收到"今天聚焦 X 件 + 悬着的事"，确认后任务出现在飞书 Todo（App 可见）。

@@ -6,27 +6,21 @@
     "prompt": "运行 arxiv-digest 技能：抓取今天的 arXiv 新论文，狠筛 3-5 篇，写成日报推送给我。"
   },
   {
-    "schedule": "30 8 * * *",
+    "schedule": "0 9 * * 1-5",
     "skill": "morning-plan",
     "deliver": "feishu",
-    "prompt": "运行 morning-plan 技能：帮我定今天 1-3 件聚焦任务，拆到下一步。"
+    "prompt": "运行 morning-plan 技能：浮出悬着的开放循环，帮我定今天 1-3 件聚焦，确认后写进飞书 Todo。"
   },
   {
-    "schedule": "0 22 * * *",
+    "schedule": "30 17 * * *",
+    "skill": "open-loop-tracker",
+    "deliver": "feishu",
+    "prompt": "运行 open-loop-tracker 技能：跑 loops-due，看有没有该跟进的开放循环，挑最要紧的按我的档位提醒；没有就别打扰。"
+  },
+  {
+    "schedule": "0 22 * * 1-5",
     "skill": "evening-review",
     "deliver": "feishu",
-    "prompt": "运行 evening-review 技能：带我复盘今天、记时间轴、把没做完的记下来。"
-  },
-  {
-    "schedule": "0 14 * * *",
-    "skill": "open-loop-tracker",
-    "deliver": "feishu",
-    "prompt": "运行 open-loop-tracker 技能：看有没有该跟进的开放循环，挑最要紧的提醒我；没有就别打扰。"
-  },
-  {
-    "schedule": "0 18 * * *",
-    "skill": "open-loop-tracker",
-    "deliver": "feishu",
-    "prompt": "运行 open-loop-tracker 技能：傍晚再巡一次开放循环，没有就安静。"
+    "prompt": "运行 evening-review 技能：读飞书 Todo 看今天做了啥，带我复盘、记时间轴、把没做完的转成开放循环。"
   }
 ]

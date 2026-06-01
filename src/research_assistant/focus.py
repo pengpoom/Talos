@@ -68,4 +68,4 @@ def end_focus(*, ended: str) -> dict:
 def elapsed_minutes(started: str, now: str) -> int:
     fmt = "%Y-%m-%dT%H:%M"
     delta = datetime.strptime(now, fmt) - datetime.strptime(started, fmt)
-    return int(delta.total_seconds() // 60)
+    return max(0, int(delta.total_seconds() // 60))

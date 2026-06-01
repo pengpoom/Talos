@@ -37,6 +37,7 @@ def test_end_focus_without_active_raises(tmp_path, monkeypatch):
 def test_elapsed_minutes():
     assert focus.elapsed_minutes("2026-06-01T14:00", "2026-06-01T14:45") == 45
     assert focus.elapsed_minutes("2026-06-01T14:00", "2026-06-01T15:30") == 90
+    assert focus.elapsed_minutes("2026-06-01T16:27", "2026-06-01T08:31") == 0
 
 
 # --- 历史存档 ---
