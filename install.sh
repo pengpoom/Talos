@@ -21,7 +21,7 @@ $PIP install -e "$REPO"
 
 echo "==> 建目录"
 mkdir -p "$RESEARCH/state/papers" "$RESEARCH/state/timeline" \
-         "$HERMES/skills/research"
+         "$HERMES/skills/research" "$HERMES/skills/work"
 
 echo "==> 配置文件"
 if [ ! -f "$RESEARCH/prefs.yaml" ]; then
@@ -33,6 +33,7 @@ fi
 
 echo "==> 安装技能"
 cp -r "$REPO/pack/skills/research/." "$HERMES/skills/research/"
+cp -r "$REPO/pack/skills/work/." "$HERMES/skills/work/"
 
 echo "==> 合并 SOUL 人设（幂等）"
 SOUL="$HERMES/SOUL.md"
