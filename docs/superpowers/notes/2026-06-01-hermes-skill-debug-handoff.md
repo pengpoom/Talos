@@ -36,15 +36,23 @@
 - `tests/test_focus.py` 加回归断言（16:27→08:31 应得 0）。`pytest -q` → **67 passed**。CLI 是 editable 装，改完即生效，无需重启/重部署。
 - 注：agent 当时**自己发现并改正了 `focus_log.jsonl`** 那条负数（改成 4min），只漏了 `focus.json`——我已补正。
 
-## 待办（Phase 2，按混合方案收尾）
-- **`morning-plan` / `evening-review` 仍跑 `today.json`**，与"Todo 归飞书"冲突（SOUL 规则已把规划/复盘指向飞书，但这俩技能的 procedure 还在写/读 today.json）。要把它们 **repoint 到 lark-task（飞书 Todo）**：morning-plan 把计划写进飞书 Todo + 保留 `loops-list` 浮出悬着的事；evening-review 读飞书 Todo 看完成度 + 保留 `timeline-append`/`loops-add`。这会让 `today-*` 子系统基本退役（代码留着无害，测试照绿）。
-- **cron**：morning-plan(08:30)/evening-review(22:00) 的定时还在跑 today.json 流，Phase 2 一起调。
-- **会话习惯**：线上那个长会话（history 140+）有 lark-task×25 的惯性；干净会话测试已过，但老会话里可能仍偶发漂移。SOUL 规则每条消息都加载，应能压住；要最干净就开个新飞书会话测。
+## Phase 2 已完成（同日晚）+ 工作侧起步
+- ✅ **`morning-plan` / `evening-review` repoint 到飞书 Todo**（v2.0.0）：morning 浮出 `loops-due` → 提 1-3 件 → 确认后写飞书 Todo（不写 today.json）；evening 读飞书 Todo + `timeline-append` + `loops-add`（`--due` 强制 ISO；专注会话已由 focus-end 自动入时间轴，复盘不重复记）。`today-*` CLI 退役（代码/测试保留，67 测绿）。
+- ✅ **cron 收编**：删 4 个通用"科研监督" + 多余 10:00 巡检，换成 **9:00 morning-plan(工作日) / 17:30 开放循环巡检(每天) / 22:00 evening-review(工作日)**，全挂 `--skill` + deliver 飞书。备份 `~/.hermes/cron/jobs.json.bak-20260601`。
+- ✅ **5 个 MVP 功能全验证**：focus / open-loop(含 17:30 巡检实测) / morning-plan / evening-review / arxiv-digest(fetch 实测抓 50 篇；之前失败是限流/超时，非 bug)。
+- ✅ **工作侧起步**（新 `work/` 分类，install.sh 已拷 + SOUL 加路由 + 自测过）：`draft-reply`（写回复/邮件/润色，默认只出草稿，明确说"直接发 X"才 `lark-im --as user` 代发）；`project-review`（按 `~/.hermes/research/review-sop.md` 或默认镜审方案，输出"问题/风险/建议/可发送意见/待追问"5 段）。
+
+## 残留待办
+- **provider fallback（最要紧）**：ppqq(`https://ppqq.997525.xyz/v1`) 反复抽风（502 / 单次 234s 龟速），`fallback_providers: []` 空 → 一抽风 bot 整个哑。`hermes fallback add` 配个备胎。
+- **draft-reply 飞书授权**：首次读会话/查联系人触发 `missing_scope`，agent 已发设备码授权链接，用户点一下补 contact+im 权限即长期可用。
+- **下一个工作技能**：`meeting-to-actions`（会议纪要拆 Todo）；`follow-up-nudger` 别单独做（≈ open-loop-tracker，并进去）。
+- **会话习惯**：长会话曾被"陪我专注→建cron"养坏过，删会话 + 硬路由已解；新会话不受影响。
+- **arxiv 韧性（可选）**：加 Retry-After/退避/缓存（once-daily cron 其实够用）。
 
 ## 怎么验（线上）
-飞书发"陪我专注 2 分钟测试，任务写 X" → `cat ~/.hermes/research/state/focus.json` 应有 active:true + 你的 task。状态文件位置：`~/.hermes/research/state/`：`today.json`、`open_loops.json`、`focus.json`、`focus_log.jsonl`、`timeline/<date>.md`。
+飞书发"陪我专注 2 分钟测试，任务写 X" → `cat ~/.hermes/research/state/focus.json` 应有 active:true + 你的 task。状态文件位置：`~/.hermes/research/state/`：`open_loops.json`、`focus.json`、`focus_log.jsonl`、`timeline/<date>.md`（`today.json` 已退役）。
 
 ## 约束（沿用）
 - 中文回复；不加多余注释；不改已有函数签名；边写边跑 pytest。
 - **git 操作只给命令、不替用户执行。**
-- 本机环境：用 `python3`（无 `python`）；pytest 需 `python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pytest`（环境有 SSL 证书问题）。Hermes agent 跑在 gpt-5.5（自定义 provider）。部署：改技能后 `cp -r pack/skills/research/. ~/.hermes/skills/research/` + regex 合 SOUL（见 install.sh），再 `hermes gateway restart`；`pip install -e` 那步本机会被 SSL 卡，按需跳过（包已 editable 装好）。
+- 本机环境：用 `python3`（无 `python`）；pytest 需 `python3 -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org pytest`（环境有 SSL 证书问题）。Hermes agent 跑在 gpt-5.5（自定义 provider）。部署：改技能后 `cp -r pack/skills/research/. ~/.hermes/skills/research/`（工作侧 `cp -r pack/skills/work/. ~/.hermes/skills/work/`）+ regex 合 SOUL（见 install.sh），再 `hermes gateway restart`；`pip install -e` 那步本机会被 SSL 卡，按需跳过（包已 editable 装好）。
