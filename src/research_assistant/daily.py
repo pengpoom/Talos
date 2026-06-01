@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from . import state
 
@@ -113,3 +114,22 @@ def append_timeline(date: str, line: str) -> None:
     path = timeline_path(date)
     existing = path.read_text(encoding="utf-8") if path.exists() else f"# {date} 时间轴\n"
     state.atomic_write_text(path, existing + line.rstrip("\n") + "\n")
+
+
+def _days_between(a: str, b: str) -> int:
+    fmt = "%Y-%m-%d"
+    return (datetime.strptime(b, fmt).date() - datetime.strptime(a, fmt).date()).days
+
+
+def is_overdue(loop: dict, today: str) -> bool:
+    due = loop.get("due")
+    return bool(due) and due <= today
+
+
+def due_for_nudge(loops: list, today: str, *, cadence_days: int = 1) -> list:
+    out = [l for l in loops
+           if l.get("status") == "open"
+           and (l.get("last_nudged") is None
+                or _days_between(l["last_nudged"], today) >= cadence_days)]
+    out.sort(key=lambda l: (not is_overdue(l, today), l.get("created", "")))
+    return out

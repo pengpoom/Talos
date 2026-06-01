@@ -31,6 +31,10 @@ def today_str(tz: str) -> str:
     return datetime.now(ZoneInfo(tz)).strftime("%Y-%m-%d")
 
 
+def now_iso(tz: str) -> str:
+    return datetime.now(ZoneInfo(tz)).strftime("%Y-%m-%dT%H:%M")
+
+
 def atomic_write_text(path, text: str) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -110,3 +110,44 @@ def test_append_timeline_creates_and_appends(tmp_path, monkeypatch):
     text = daily.timeline_path("2026-05-30").read_text(encoding="utf-8")
     assert text.startswith("# 2026-05-30 时间轴")
     assert "写 intro ✅" in text and "读论文" in text
+
+
+# --- 巡检 due_for_nudge ---
+
+def test_days_between_basic():
+    assert daily._days_between("2026-05-30", "2026-06-01") == 2
+
+
+def test_is_overdue():
+    assert daily.is_overdue({"due": "2026-05-30"}, "2026-06-01") is True
+    assert daily.is_overdue({"due": "2026-06-02"}, "2026-06-01") is False
+    assert daily.is_overdue({"due": None}, "2026-06-01") is False
+
+
+def test_due_for_nudge_includes_open_never_nudged():
+    loops = [{"id": "o1", "status": "open", "last_nudged": None,
+              "created": "2026-05-30", "due": None}]
+    assert [l["id"] for l in daily.due_for_nudge(loops, "2026-06-01")] == ["o1"]
+
+
+def test_due_for_nudge_excludes_closed_and_nudged_today():
+    loops = [
+        {"id": "o1", "status": "done", "last_nudged": None, "created": "2026-05-30", "due": None},
+        {"id": "o2", "status": "open", "last_nudged": "2026-06-01", "created": "2026-05-30", "due": None},
+    ]
+    assert daily.due_for_nudge(loops, "2026-06-01") == []
+
+
+def test_due_for_nudge_respects_cadence():
+    loops = [{"id": "o1", "status": "open", "last_nudged": "2026-05-30",
+              "created": "2026-05-30", "due": None}]
+    assert daily.due_for_nudge(loops, "2026-06-01", cadence_days=3) == []
+    assert [l["id"] for l in daily.due_for_nudge(loops, "2026-06-01", cadence_days=2)] == ["o1"]
+
+
+def test_due_for_nudge_overdue_sorts_first():
+    loops = [
+        {"id": "o1", "status": "open", "last_nudged": None, "created": "2026-05-31", "due": None},
+        {"id": "o2", "status": "open", "last_nudged": None, "created": "2026-05-30", "due": "2026-05-29"},
+    ]
+    assert [l["id"] for l in daily.due_for_nudge(loops, "2026-06-01")] == ["o2", "o1"]
