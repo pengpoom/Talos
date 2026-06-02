@@ -19,7 +19,7 @@ metadata:
    ```
    research-assistant loops-due --tz <prefs.timezone>
    ```
-   （也可 `research-assistant loops-list` 看全部 open）。挑出今天值得推进的。
+   （也可 `loops-due --domain work` / `--domain research` 把工作和科研的**分开看**）。挑出今天值得推进的，规划时科研/工作分别列。
 
 2. **提建议（判断活）**：读 `~/.hermes/research/prefs.yaml` 的 `style`。
    - 给 **1-3 件**今天最该做的（别贪多，ADHD 友好），每件**拆到"下一个最小动作"**（不是"写论文"，是"打开 overleaf 写 intro 第一句"）。

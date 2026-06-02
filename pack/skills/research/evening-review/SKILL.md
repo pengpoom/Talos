@@ -28,7 +28,7 @@ metadata:
 
 4. **没做完的转开放循环**：对仍未完成、又值得继续的，问"滚到明天还是先记着"，记着的转入开放循环：
    ```
-   research-assistant loops-add --tz <tz> --desc "<没做完的事>" --source "未完成" --due <YYYY-MM-DD>
+   research-assistant loops-add --tz <tz> --desc "<没做完的事>" --source "未完成" --domain <research|work> --next-action "<下一个最小动作>" --due <YYYY-MM-DD>
    ```
 
 5. **收尾**：给用户一句明天的引子。把复盘小结作为最终回复（cron deliver 飞书）。

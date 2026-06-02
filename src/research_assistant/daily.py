@@ -64,8 +64,17 @@ def undone_items(today: dict) -> list:
     return [it for it in today["plan"] if not it["done"]]
 
 
+_LOOP_DEFAULTS = {"domain": "research", "next_action": None,
+                  "priority": "medium", "project": None, "owner": None}
+_PRIORITY_RANK = {"urgent": 0, "high": 1, "medium": 2, "low": 3}
+
+
 def load_loops() -> list:
-    return state.read_json(open_loops_path(), default=[])
+    loops = state.read_json(open_loops_path(), default=[])
+    for loop in loops:
+        for k, v in _LOOP_DEFAULTS.items():
+            loop.setdefault(k, v)
+    return loops
 
 
 def save_loops(loops: list) -> None:
@@ -78,20 +87,35 @@ def _next_id(items: list, prefix: str) -> str:
     return f"{prefix}{(max(nums) if nums else 0) + 1}"
 
 
-def add_loop(loops: list, desc: str, *, source: str, created: str, due=None) -> dict:
+def add_loop(loops: list, desc: str, *, source: str, created: str, due=None,
+             domain: str = "research", next_action=None, priority: str = "medium",
+             project=None, owner=None) -> dict:
     loop = {"id": _next_id(loops, "o"), "desc": desc, "created": created,
-            "last_nudged": None, "status": "open", "due": due, "source": source}
+            "last_nudged": None, "status": "open", "due": due, "source": source,
+            "domain": domain, "next_action": next_action, "priority": priority,
+            "project": project, "owner": owner}
     loops.append(loop)
     return loop
 
 
-def update_loop(loops: list, loop_id: str, *, status=None, nudged_date=None) -> dict:
+def update_loop(loops: list, loop_id: str, *, status=None, nudged_date=None,
+                next_action=None, priority=None, domain=None, project=None, owner=None) -> dict:
     for loop in loops:
         if loop["id"] == loop_id:
             if status:
                 loop["status"] = status
             if nudged_date:
                 loop["last_nudged"] = nudged_date
+            if next_action is not None:
+                loop["next_action"] = next_action
+            if priority is not None:
+                loop["priority"] = priority
+            if domain is not None:
+                loop["domain"] = domain
+            if project is not None:
+                loop["project"] = project
+            if owner is not None:
+                loop["owner"] = owner
             return loop
     raise KeyError(loop_id)
 
@@ -131,5 +155,7 @@ def due_for_nudge(loops: list, today: str, *, cadence_days: int = 1) -> list:
            if l.get("status") == "open"
            and (l.get("last_nudged") is None
                 or _days_between(l["last_nudged"], today) >= cadence_days)]
-    out.sort(key=lambda l: (not is_overdue(l, today), l.get("created", "")))
+    out.sort(key=lambda l: (not is_overdue(l, today),
+                            _PRIORITY_RANK.get(l.get("priority", "medium"), 2),
+                            l.get("created", "")))
     return out
