@@ -33,7 +33,7 @@ metadata:
 3. **结论可回查**：关键结论标出处（第几节 / 图表 / 原文），别给无来源的断言。
 
 4. **可选收尾**：
-   - 问用户要不要把笔记**存成飞书文档**（`lark-doc`）或进 `llm-wiki`。
+   - 问要不要把笔记**存成飞书文档**（`lark-doc`）；存了就**接着问要不要进论文库**（`paper-library` 入库，带上笔记链接 + 你的 Zotero 链接）。
    - 若刚推进了某个开放循环（如"读 X 的实验部分"），问要不要 `research-assistant loops-resolve`。
 
 ## Pitfalls
