@@ -41,11 +41,13 @@
 - ✅ **cron 收编**：删 4 个通用"科研监督" + 多余 10:00 巡检，换成 **9:00 morning-plan(工作日) / 17:30 开放循环巡检(每天) / 22:00 evening-review(工作日)**，全挂 `--skill` + deliver 飞书。备份 `~/.hermes/cron/jobs.json.bak-20260601`。
 - ✅ **5 个 MVP 功能全验证**：focus / open-loop(含 17:30 巡检实测) / morning-plan / evening-review / arxiv-digest(fetch 实测抓 50 篇；之前失败是限流/超时，非 bug)。
 - ✅ **工作侧起步**（新 `work/` 分类，install.sh 已拷 + SOUL 加路由 + 自测过）：`draft-reply`（写回复/邮件/润色，默认只出草稿，明确说"直接发 X"才 `lark-im --as user` 代发）；`project-review`（按 `~/.hermes/research/review-sop.md` 或默认镜审方案，输出"问题/风险/建议/可发送意见/待追问"5 段）。
+- ✅ **再加 3 个技能（同日晚，自测通过）**：`paper-reader`（深读一篇论文 → 贡献/方法/实验/与你方向关系/存疑，结论带出处；`web_extract`/`lark-doc` 读）、`weekly-report`（读 `focus-stats`/时间轴/飞书 Todo/开放循环 → 周报草稿）、`meeting-to-actions`（会议纪要 → 决定+待办(事/人/截止)+风险，只建"你的"飞书 Todo、别人不替建）。**Talos 自建技能共 10 个：科研 7（arxiv-digest/focus-buddy/morning-plan/evening-review/open-loop-tracker/paper-reader/weekly-report）+ 工作 3（draft-reply/project-review/meeting-to-actions）。**
+- ✅ **OpenLoop 核心升级（pro-Talos 的 #1，2026-06-02）**：`open_loops` 加 `domain/next_action/priority/owner/project`；`daily.py`+`cli.py` 加 `loops-update`、`loops-add/due/list` 的 `--domain` 等 flag、`load_loops` 自动回填老数据（**76 测绿**）。`open-loop-tracker` v2.0.0 加"捕获"段（"记一下" → 自动判 domain/next_action/owner/priority），SOUL 路由带字段；meeting/morning/evening/weekly 都接上按 domain 分。自测："记一下催张三确认接口,挺急的" → `domain=work, owner=张三, next_action=…, priority=urgent` ✅。
 
 ## 残留待办
 - **provider fallback（最要紧）**：ppqq(`https://ppqq.997525.xyz/v1`) 反复抽风（502 / 单次 234s 龟速），`fallback_providers: []` 空 → 一抽风 bot 整个哑。`hermes fallback add` 配个备胎。
 - **draft-reply 飞书授权**：首次读会话/查联系人触发 `missing_scope`，agent 已发设备码授权链接，用户点一下补 contact+im 权限即长期可用。
-- **下一个工作技能**：`meeting-to-actions`（会议纪要拆 Todo）；`follow-up-nudger` 别单独做（≈ open-loop-tracker，并进去）。
+- **后续技能候选（按需）**：`inbox-digest`（飞书未读/待回复整理）等；`follow-up-nudger` 别单独做（≈ open-loop-tracker，并进去）；`总结文档` 用 lark-doc 自带、不必单开。
 - **会话习惯**：长会话曾被"陪我专注→建cron"养坏过，删会话 + 硬路由已解；新会话不受影响。
 - **arxiv 韧性（可选）**：加 Retry-After/退避/缓存（once-daily cron 其实够用）。
 

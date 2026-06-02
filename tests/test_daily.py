@@ -151,3 +151,50 @@ def test_due_for_nudge_overdue_sorts_first():
         {"id": "o2", "status": "open", "last_nudged": None, "created": "2026-05-30", "due": "2026-05-29"},
     ]
     assert [l["id"] for l in daily.due_for_nudge(loops, "2026-06-01")] == ["o2", "o1"]
+
+
+# --- open_loops 富字段（domain/next_action/priority/owner/project）---
+
+def test_add_loop_stores_new_fields(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    loop = daily.add_loop([], "催张三确认接口", source="会议", created="2026-06-02",
+                          domain="work", next_action="发消息问接口字段", priority="high",
+                          owner="张三", project="A项目")
+    assert loop["domain"] == "work" and loop["owner"] == "张三"
+    assert loop["next_action"] == "发消息问接口字段" and loop["priority"] == "high"
+    assert loop["project"] == "A项目"
+
+
+def test_add_loop_defaults_new_fields():
+    loop = daily.add_loop([], "x", source="碎念", created="2026-06-02")
+    assert loop["domain"] == "research" and loop["priority"] == "medium"
+    assert loop["next_action"] is None and loop["owner"] is None
+
+
+def test_load_loops_backfills_old_schema(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    daily.save_loops([{"id": "o1", "desc": "老条目", "created": "2026-05-30",
+                       "last_nudged": None, "status": "open", "due": None, "source": "碎念"}])
+    loop = daily.load_loops()[0]
+    assert loop["domain"] == "research" and loop["priority"] == "medium"
+    assert loop["next_action"] is None and loop["owner"] is None and loop["project"] is None
+
+
+def test_update_loop_sets_new_fields(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    loops = []
+    daily.add_loop(loops, "x", source="碎念", created="2026-06-02")
+    daily.update_loop(loops, "o1", next_action="先打开岗位列表", priority="urgent",
+                      domain="work", owner="我")
+    assert loops[0]["next_action"] == "先打开岗位列表"
+    assert loops[0]["priority"] == "urgent" and loops[0]["domain"] == "work"
+
+
+def test_due_for_nudge_priority_sorts_before_created():
+    loops = [
+        {"id": "o1", "status": "open", "last_nudged": None, "created": "2026-05-30",
+         "due": None, "priority": "low"},
+        {"id": "o2", "status": "open", "last_nudged": None, "created": "2026-05-31",
+         "due": None, "priority": "urgent"},
+    ]
+    assert [l["id"] for l in daily.due_for_nudge(loops, "2026-06-02")] == ["o2", "o1"]

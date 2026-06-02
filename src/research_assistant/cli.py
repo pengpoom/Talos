@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from . import config, state, arxiv, daily, focus
 
@@ -77,14 +78,19 @@ def cmd_today_rollover(args) -> int:
 
 
 def cmd_loops_list(args) -> int:
-    print(json.dumps(daily.load_loops(), ensure_ascii=False, indent=2))
+    loops = daily.load_loops()
+    if args.domain:
+        loops = [l for l in loops if l.get("domain") == args.domain]
+    print(json.dumps(loops, ensure_ascii=False, indent=2))
     return 0
 
 
 def cmd_loops_add(args) -> int:
     loops = daily.load_loops()
     loop = daily.add_loop(loops, args.desc, source=args.source,
-                          created=state.today_str(args.tz), due=args.due)
+                          created=state.today_str(args.tz), due=args.due,
+                          domain=args.domain, next_action=args.next_action,
+                          priority=args.priority, project=args.project, owner=args.owner)
     daily.save_loops(loops)
     print(json.dumps(loop, ensure_ascii=False, indent=2))
     return 0
@@ -100,6 +106,8 @@ def cmd_timeline_append(args) -> int:
 def cmd_loops_due(args) -> int:
     due = daily.due_for_nudge(daily.load_loops(), state.today_str(args.tz),
                               cadence_days=args.cadence)
+    if args.domain:
+        due = [l for l in due if l.get("domain") == args.domain]
     print(json.dumps(due, ensure_ascii=False, indent=2))
     return 0
 
@@ -120,6 +128,20 @@ def cmd_loops_resolve(args) -> int:
     loops = daily.load_loops()
     try:
         loop = daily.update_loop(loops, args.id, status=args.status)
+    except KeyError:
+        print(f"no such loop: {args.id}", file=sys.stderr)
+        return 1
+    daily.save_loops(loops)
+    print(json.dumps(loop, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_loops_update(args) -> int:
+    loops = daily.load_loops()
+    try:
+        loop = daily.update_loop(loops, args.id, status=args.status,
+                                 next_action=args.next_action, priority=args.priority,
+                                 domain=args.domain, project=args.project, owner=args.owner)
     except KeyError:
         print(f"no such loop: {args.id}", file=sys.stderr)
         return 1
@@ -178,6 +200,14 @@ def _default_tz() -> str:
         return "UTC"
 
 
+def _safe_tz(tz: str) -> str:
+    try:
+        ZoneInfo(tz)
+        return tz
+    except Exception:
+        return _default_tz()
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="research-assistant")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -222,6 +252,7 @@ def main(argv=None) -> int:
     pro.set_defaults(func=cmd_today_rollover)
 
     pll = sub.add_parser("loops-list")
+    pll.add_argument("--domain", default=None, choices=["research", "work", "personal"])
     pll.set_defaults(func=cmd_loops_list)
 
     pla = sub.add_parser("loops-add")
@@ -229,6 +260,11 @@ def main(argv=None) -> int:
     pla.add_argument("--desc", required=True)
     pla.add_argument("--source", required=True)
     pla.add_argument("--due", default=None)
+    pla.add_argument("--domain", default="research", choices=["research", "work", "personal"])
+    pla.add_argument("--next-action", default=None)
+    pla.add_argument("--priority", default="medium", choices=["low", "medium", "high", "urgent"])
+    pla.add_argument("--project", default=None)
+    pla.add_argument("--owner", default=None)
     pla.set_defaults(func=cmd_loops_add)
 
     pta = sub.add_parser("timeline-append")
@@ -240,6 +276,7 @@ def main(argv=None) -> int:
     pld = sub.add_parser("loops-due", help="列出该跟进（巡检）的开放循环")
     pld.add_argument("--tz", default=tzd)
     pld.add_argument("--cadence", type=int, default=1)
+    pld.add_argument("--domain", default=None, choices=["research", "work", "personal"])
     pld.set_defaults(func=cmd_loops_due)
 
     pln = sub.add_parser("loops-nudge", help="标记某开放循环今天已提醒")
@@ -251,6 +288,16 @@ def main(argv=None) -> int:
     plr.add_argument("--id", required=True)
     plr.add_argument("--status", required=True, choices=["done", "dropped"])
     plr.set_defaults(func=cmd_loops_resolve)
+
+    plu = sub.add_parser("loops-update", help="改开放循环字段（next-action/priority/domain/owner…）")
+    plu.add_argument("--id", required=True)
+    plu.add_argument("--status", default=None)
+    plu.add_argument("--next-action", default=None)
+    plu.add_argument("--priority", default=None, choices=["low", "medium", "high", "urgent"])
+    plu.add_argument("--domain", default=None, choices=["research", "work", "personal"])
+    plu.add_argument("--project", default=None)
+    plu.add_argument("--owner", default=None)
+    plu.set_defaults(func=cmd_loops_update)
 
     pfs = sub.add_parser("focus-start", help="开始一次专注会话")
     pfs.add_argument("--tz", default=tzd)
@@ -275,6 +322,8 @@ def main(argv=None) -> int:
     pfstat.set_defaults(func=cmd_focus_stats)
 
     args = parser.parse_args(argv)
+    if getattr(args, "tz", None):
+        args.tz = _safe_tz(args.tz)
     return args.func(args)
 
 

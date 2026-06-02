@@ -164,3 +164,47 @@ def test_focus_log_and_stats(tmp_path, monkeypatch, capsys):
     assert items[0]["task"] == "a"
     assert cli.main(["focus-stats"]) == 0
     assert json.loads(capsys.readouterr().out)["count"] == 1
+
+
+def test_loops_add_with_new_fields(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    rc = cli.main(["loops-add", "--tz", "UTC", "--desc", "催张三", "--source", "会议",
+                   "--domain", "work", "--owner", "张三", "--next-action", "问接口",
+                   "--priority", "high"])
+    assert rc == 0
+    loop = json.loads(capsys.readouterr().out)
+    assert loop["domain"] == "work" and loop["owner"] == "张三"
+    assert loop["next_action"] == "问接口" and loop["priority"] == "high"
+
+
+def test_loops_update_fields(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    cli.main(["loops-add", "--tz", "UTC", "--desc", "x", "--source", "碎念"])
+    capsys.readouterr()
+    assert cli.main(["loops-update", "--id", "o1", "--priority", "urgent",
+                     "--next-action", "下一步"]) == 0
+    loop = json.loads(capsys.readouterr().out)
+    assert loop["priority"] == "urgent" and loop["next_action"] == "下一步"
+
+
+def test_loops_update_bad_id_returns_1(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    assert cli.main(["loops-update", "--id", "oX", "--priority", "high"]) == 1
+
+
+def test_loops_due_domain_filter(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    cli.main(["loops-add", "--tz", "UTC", "--desc", "读论文", "--source", "碎念", "--domain", "research"])
+    cli.main(["loops-add", "--tz", "UTC", "--desc", "催接口", "--source", "会议", "--domain", "work"])
+    capsys.readouterr()
+    assert cli.main(["loops-due", "--tz", "UTC", "--domain", "work"]) == 0
+    due = json.loads(capsys.readouterr().out)
+    assert [l["desc"] for l in due] == ["催接口"]
+
+
+def test_invalid_tz_falls_back_no_crash(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    (tmp_path / "prefs.yaml").write_text("timezone: Asia/Shanghai\n", encoding="utf-8")
+    # agent 有时会误传 "CST" 这种非法 tz —— 不该崩，应回退到 prefs 时区
+    assert cli.main(["loops-add", "--tz", "CST", "--desc", "x", "--source", "测试"]) == 0
+    assert json.loads(capsys.readouterr().out)["desc"] == "x"

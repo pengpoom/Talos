@@ -1,45 +1,51 @@
 ---
 name: open-loop-tracker
-description: 巡检开放循环，挑该跟进的提醒用户；没有就不打扰。cron 触发（默认 14:00 / 18:00）。
-version: 1.0.0
+description: 捕获和巡检开放循环（悬着的事/承诺）。捕获：用户"记一下 / 别让我忘了 X / 得催某人"→ 落库并判断 domain/下一步/负责人/优先级。巡检：cron 或"有啥悬着的"→ 挑该跟进的提醒，没有就闭嘴。
+version: 2.0.0
 platforms: [linux, macos]
 metadata:
   hermes:
-    tags: [research, follow-up, adhd]
+    tags: [research, work, follow-up, adhd]
     category: research
 ---
 
 ## When to Use
-- cron 每天下午触发（默认 14:00、18:00）。
-- 用户主动说"有啥悬着的事没 / 我还欠着啥"。
+- **捕获**：用户"记一下 / 别让我忘了 / 我答应了 / 得催某人 …"——随口的承诺、悬着的事。
+- **巡检**：cron 触发（默认下午/傍晚）；或用户"有啥悬着的事没 / 我还欠着啥"。
 
-## Procedure
+## A. 捕获（记一下 → loops-add，带上字段）
+用户让你记一件悬着的事，**判断并带上这些字段再落库**：
+```
+research-assistant loops-add --tz <tz> --desc "<事>" --source "<哪来的>" \
+  --domain <research|work|personal> --next-action "<下一个最小动作>" \
+  --priority <low|medium|high|urgent> [--owner <谁>] [--due <YYYY-MM-DD>]
+```
+- **domain**：论文/实验/学习/写作 = research；回消息/审方案/项目/催人 = work；私人 = personal。拿不准默认 research。
+- **next_action**：拆到"下一个最小动作"（不是"催张三"，是"发消息问接口字段定了没"）。**这条最重要，别只记个模糊的事**。
+- **owner**：如果是"催/等某人"，owner = 那个人。
+- **priority**：今天就要/卡着别的 = high/urgent；一般 = medium。
+- **due**：有明确期限才带，用 `YYYY-MM-DD`。
+落库后回一句确认（"记下了：<事>，下一步 <...>"）。
 
-1. **取该跟进的**：运行
-   ```
-   research-assistant loops-due --tz <prefs.timezone>
-   ```
-   返回已排序的开放循环（overdue 的排前面），可能为空。
-
-2. **空 → 闭嘴**。直接结束,别为了发而发。巡检的价值是"该提醒才提醒",不是定点骚扰。
-
-3. **非空（判断活）**：读 `~/.hermes/research/prefs.yaml` 的 `style`。
-   - 挑**最多 1-3 件**最要紧的（overdue 优先），别把整张单子倒出来。
-   - 按 `style.accountability` 档位语气提醒。
-   - 每件给个出路："现在推一下？ / 要不要专注一会？ / 还是先搁着？"
-
-4. **按用户回应落账**（关键，否则同一天 18:00 会重复提醒同一件）：
-   - 做完了 → `research-assistant loops-resolve --id <id> --status done`
-   - 不做了 / 没必要了 → `research-assistant loops-resolve --id <id> --status dropped`
-   - 先搁着 → `research-assistant loops-nudge --tz <tz> --id <id>`（标记今天已提醒）
-
-5. （可衔接 focus-buddy）用户想立刻做某件 → 引导进专注会话（见 focus-buddy 技能）。
+## B. 巡检（cron / "有啥悬着的"）
+1. **取该跟进的**：`research-assistant loops-due --tz <tz>`（已按 overdue → 优先级 → 创建早 排序；可加 `--domain work` 只看某类）。可能为空。
+2. **空 → 闭嘴**。别为了发而发。
+3. **非空（判断活）**：读 `prefs.yaml` 的 `style`。
+   - 挑**最多 1-3 件**最要紧的，别倒整张单。
+   - 提醒时**直接带上 `next_action` 和 `owner`**——不是"有件事悬着"，是"催**张三**——下一步：**发消息问接口字段定了没**"。
+   - 按 `style.accountability` 档语气；每件给出路："现在推一下？/ 专注一会？/ 先搁着？"
+4. **按回应落账**（否则同一天会重复提醒）：
+   - 做完 → `loops-resolve --id <id> --status done`
+   - 不做了 → `loops-resolve --id <id> --status dropped`
+   - 先搁着 → `loops-nudge --tz <tz> --id <id>`
+   - 下一步变了 → `loops-update --id <id> --next-action "..."`（顺手更新）
+5. （衔接 focus-buddy）想立刻做 → 引导进专注会话。
 
 ## Pitfalls
-- **空就别推送**。宁可不发,也别凑数骚扰。
-- 一次最多挑 1-3 件,挑 overdue / 最久没动的。
-- 无论"做完/放弃/搁着",都要落一次 `loops-resolve` 或 `loops-nudge`,否则 14:00 提过 18:00 又提。
+- 捕获时**尽量带 next_action**——一个没有下一步的开放循环，巡检时也推不动。
+- domain 判断错不致命（可 `loops-update --domain` 改），但尽量分对，好让"工作上有啥悬着"筛得准。
+- 巡检：空就别推；一次最多 1-3 件；无论结果都落一次 `loops-resolve`/`loops-nudge`。
 
 ## Verification
-- 干跑：`research-assistant loops-due` 能跑。
-- 端到端：有开放循环时触发 → 飞书收到挑选后的提醒；对某件 `loops-nudge` 后再 `loops-due`,当天不再出现。
+- 捕获："记一下我得催张三确认接口" → `loops-add` 带 `domain=work, owner=张三, next_action=...`。
+- 巡检：`loops-due` 能跑；提醒里带下一步；`loops-nudge` 后当天不再出现。
