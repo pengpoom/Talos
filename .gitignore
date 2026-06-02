@@ -14,5 +14,6 @@ venv/
 # 运行时产物
 *.corrupt
 
-# 个人设计草稿（不进开源库）
+# 个人设计草稿 / 配置（不进开源库）
 pro-Talos.md
+docs/feishu-permissions.md
