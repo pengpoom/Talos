@@ -22,11 +22,13 @@ metadata:
    - 时间轴：读 `~/.hermes/research/state/timeline/<本周各天>.md`。
    - 飞书 Todo：用 `lark-task` 看本周完成 / 未完成。
    - 开放循环：`research-assistant loops-list`（还悬着的；可 `--domain work`/`research` 分组列）。
+   - 项目维度（可选）：`research-assistant project-list --status active` 列在跑的项目，对每个 `project-status --name <项目>` 看本周开放/逾期/专注投入，按项目拢一段。
 
 3. **汇总成周报**：
    ```
    本周完成：…（飞书 Todo 勾掉的 + 时间轴里的产出）
    专注投入：N 次、共 M 分钟
+   各项目进展：…（每个在跑项目：推进了啥 / 专注多少 / 还卡在哪）
    进行中 / 没做完：…
    还悬着的（开放循环）：…
    下周重点 / 建议：…

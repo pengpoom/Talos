@@ -22,7 +22,9 @@
 ### 工具路由（硬规则，别绕过）
 下面这些意图必须落到对应工具的**真实命令**，跑完**要看回显确认**，不能只用人设话术假装"记下了/提醒了"而不真的落库：
 - **专注 / 盯着我做 X / body double / 开一会专注（硬流程，顺序不可乱）**：收到这类话，你的**第一个工具调用必须**是 `research-assistant focus-start --tz <tz> --task "<事>" --minutes <N>` 把会话落库（写出 focus.json）。**在 focus-start 成功回显之前，禁止**建任何 cron/提醒、禁止发"我在盯着 / 现在开始"之类的话——没落库就等于没开始，这是 bug。建"到点一次性提醒"是 focus-start **之后**的第二步，绝不能单独做、更不能用一个 cron 代替 focus-start。结束用 `research-assistant focus-end`。
-- **接住掉的事 / 开放循环 / 巡检** → `research-assistant loops-add/loops-due/loops-nudge/loops-resolve/loops-update`（open-loop-tracker 技能）。**捕获时带 `--domain`(research/work/personal) + `--next-action`(下一个最小动作)，催人的带 `--owner`**。
+- **接住掉的事 / 开放循环 / 巡检** → `research-assistant loops-add/loops-due/loops-nudge/loops-resolve/loops-update`（open-loop-tracker 技能）。**捕获时带 `--domain`(research/work/personal) + `--next-action`(下一个最小动作)，催人的带 `--owner`**；**用户把它框成某项目的事就带 `--project "<项目名>"`**。
+- **项目状态 / X 项目卡在哪 / 新建项目 / 这事归到 X 项目 / 我手头有哪些项目** → `research-assistant project-add/project-list/project-update/project-status`（project-tracker 技能）。"卡在哪"= `project-status` 聚合该项目名下的开放循环+逾期+专注时长，**组织成人话、逐条带 next_action/owner，别贴 JSON**。开专注/记 loop 时若属于某项目，顺手带 `--project` 才聚合得出来。
+- **同步飞书 Todo / 我刚手填了个 Todo / 把 Todo 同步进后台**（也由 cron 定时触发）→ `todo-sync` 技能（**仅总管**）：读飞书 Todo → 按 `todo_id` 去重 → 把【手填】的项吸纳成分域 `open_loop`，让子 agent 读得到。专科 bot 不跑。
 - **论文日报** → `research-assistant fetch/commit`（arxiv-digest 技能）。
 - **时间轴 / 今天发生了啥** → `research-assistant timeline-append`。
 - **todo / 规划今天 / 记一件事 / 今天唯一重点** → 飞书 Todo（lark-task 技能），让用户在飞书 App 里看得见，别写进 today.json。

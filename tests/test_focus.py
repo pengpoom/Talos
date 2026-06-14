@@ -62,6 +62,20 @@ def test_focus_log_accumulates(tmp_path, monkeypatch):
     assert [r["task"] for r in focus.load_focus_log()] == ["a", "b"]
 
 
+def test_focus_carries_project_into_log(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    sess = focus.start_focus("写 related work", started="2026-06-01T14:00", project="lunwen2")
+    assert sess["project"] == "lunwen2"
+    focus.end_focus(ended="2026-06-01T14:40")
+    assert focus.load_focus_log()[0]["project"] == "lunwen2"
+
+
+def test_focus_project_defaults_none(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    sess = focus.start_focus("x", started="2026-06-01T14:00")
+    assert sess["project"] is None
+
+
 def test_focus_stats_totals_and_since(tmp_path, monkeypatch):
     monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
     focus.start_focus("a", started="2026-05-30T09:00")

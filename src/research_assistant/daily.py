@@ -65,7 +65,8 @@ def undone_items(today: dict) -> list:
 
 
 _LOOP_DEFAULTS = {"domain": "research", "next_action": None,
-                  "priority": "medium", "project": None, "owner": None}
+                  "priority": "medium", "project": None, "owner": None,
+                  "todo_id": None}
 _PRIORITY_RANK = {"urgent": 0, "high": 1, "medium": 2, "low": 3}
 
 
@@ -89,17 +90,27 @@ def _next_id(items: list, prefix: str) -> str:
 
 def add_loop(loops: list, desc: str, *, source: str, created: str, due=None,
              domain: str = "research", next_action=None, priority: str = "medium",
-             project=None, owner=None) -> dict:
+             project=None, owner=None, todo_id=None) -> dict:
     loop = {"id": _next_id(loops, "o"), "desc": desc, "created": created,
             "last_nudged": None, "status": "open", "due": due, "source": source,
             "domain": domain, "next_action": next_action, "priority": priority,
-            "project": project, "owner": owner}
+            "project": project, "owner": owner, "todo_id": todo_id}
     loops.append(loop)
     return loop
 
 
+def find_by_todo_id(loops: list, todo_id: str):
+    if not todo_id:
+        return None
+    for loop in loops:
+        if loop.get("todo_id") == todo_id:
+            return loop
+    return None
+
+
 def update_loop(loops: list, loop_id: str, *, status=None, nudged_date=None,
-                next_action=None, priority=None, domain=None, project=None, owner=None) -> dict:
+                next_action=None, priority=None, domain=None, project=None, owner=None,
+                todo_id=None) -> dict:
     for loop in loops:
         if loop["id"] == loop_id:
             if status:
@@ -116,6 +127,8 @@ def update_loop(loops: list, loop_id: str, *, status=None, nudged_date=None,
                 loop["project"] = project
             if owner is not None:
                 loop["owner"] = owner
+            if todo_id is not None:
+                loop["todo_id"] = todo_id
             return loop
     raise KeyError(loop_id)
 

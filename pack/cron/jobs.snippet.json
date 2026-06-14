@@ -21,6 +21,12 @@
     "schedule": "0 22 * * 1-5",
     "skill": "evening-review",
     "deliver": "feishu",
-    "prompt": "运行 evening-review 技能：读飞书 Todo 看今天做了啥，带我复盘、记时间轴、把没做完的转成开放循环。"
+    "prompt": "运行 evening-review 技能：从共享后台读今天做了啥（含各 bot 进展），带我复盘、记时间轴、把没做完的转成开放循环、对账飞书 Todo。"
+  },
+  {
+    "schedule": "0 11,15,19 * * *",
+    "skill": "todo-sync",
+    "deliver": "local",
+    "prompt": "运行 todo-sync 技能：读飞书 Todo，把手填的、共享后台还没有的项按 domain 吸纳成 open_loop（靠 todo_id 去重）。没有新吸纳就保持沉默。"
   }
 ]

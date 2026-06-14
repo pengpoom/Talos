@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from . import config, state, arxiv, daily, focus
+from . import config, state, arxiv, daily, focus, projects
 
 
 def cmd_fetch(args) -> int:
@@ -81,6 +81,8 @@ def cmd_loops_list(args) -> int:
     loops = daily.load_loops()
     if args.domain:
         loops = [l for l in loops if l.get("domain") == args.domain]
+    if getattr(args, "todo_id", None):
+        loops = [l for l in loops if l.get("todo_id") == args.todo_id]
     print(json.dumps(loops, ensure_ascii=False, indent=2))
     return 0
 
@@ -90,7 +92,8 @@ def cmd_loops_add(args) -> int:
     loop = daily.add_loop(loops, args.desc, source=args.source,
                           created=state.today_str(args.tz), due=args.due,
                           domain=args.domain, next_action=args.next_action,
-                          priority=args.priority, project=args.project, owner=args.owner)
+                          priority=args.priority, project=args.project, owner=args.owner,
+                          todo_id=args.todo_id)
     daily.save_loops(loops)
     print(json.dumps(loop, ensure_ascii=False, indent=2))
     return 0
@@ -141,7 +144,8 @@ def cmd_loops_update(args) -> int:
     try:
         loop = daily.update_loop(loops, args.id, status=args.status,
                                  next_action=args.next_action, priority=args.priority,
-                                 domain=args.domain, project=args.project, owner=args.owner)
+                                 domain=args.domain, project=args.project, owner=args.owner,
+                                 todo_id=args.todo_id)
     except KeyError:
         print(f"no such loop: {args.id}", file=sys.stderr)
         return 1
@@ -151,8 +155,51 @@ def cmd_loops_update(args) -> int:
 
 
 def cmd_focus_start(args) -> int:
-    sess = focus.start_focus(args.task, started=state.now_iso(args.tz), planned_min=args.minutes)
+    sess = focus.start_focus(args.task, started=state.now_iso(args.tz),
+                             planned_min=args.minutes, project=args.project)
     print(json.dumps(sess, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_project_add(args) -> int:
+    ps = projects.load_projects()
+    p = projects.add_project(ps, args.name, created=state.today_str(args.tz),
+                             domain=args.domain, goal=args.goal or "",
+                             status=args.status, next_milestone=args.next_milestone)
+    projects.save_projects(ps)
+    print(json.dumps(p, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_project_list(args) -> int:
+    ps = projects.load_projects()
+    if args.domain:
+        ps = [p for p in ps if p.get("domain") == args.domain]
+    if args.status:
+        ps = [p for p in ps if p.get("status") == args.status]
+    print(json.dumps(ps, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_project_update(args) -> int:
+    ps = projects.load_projects()
+    try:
+        p = projects.update_project(ps, args.id, updated=state.today_str(args.tz),
+                                    name=args.name, status=args.status, goal=args.goal,
+                                    next_milestone=args.next_milestone, domain=args.domain,
+                                    add_doc=args.add_doc, add_person=args.add_person)
+    except KeyError:
+        print(f"no such project: {args.id}", file=sys.stderr)
+        return 1
+    projects.save_projects(ps)
+    print(json.dumps(p, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_project_status(args) -> int:
+    out = projects.project_status(args.name, projects.load_projects(), daily.load_loops(),
+                                  focus.load_focus_log(), state.today_str(args.tz))
+    print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -253,6 +300,7 @@ def main(argv=None) -> int:
 
     pll = sub.add_parser("loops-list")
     pll.add_argument("--domain", default=None, choices=["research", "work", "personal"])
+    pll.add_argument("--todo-id", default=None, help="按飞书 Todo GUID 过滤（查这条是否已吸纳）")
     pll.set_defaults(func=cmd_loops_list)
 
     pla = sub.add_parser("loops-add")
@@ -265,6 +313,7 @@ def main(argv=None) -> int:
     pla.add_argument("--priority", default="medium", choices=["low", "medium", "high", "urgent"])
     pla.add_argument("--project", default=None)
     pla.add_argument("--owner", default=None)
+    pla.add_argument("--todo-id", default=None, help="飞书 Todo 的 GUID（来自手填 Todo 的吸纳，去重用）")
     pla.set_defaults(func=cmd_loops_add)
 
     pta = sub.add_parser("timeline-append")
@@ -297,13 +346,46 @@ def main(argv=None) -> int:
     plu.add_argument("--domain", default=None, choices=["research", "work", "personal"])
     plu.add_argument("--project", default=None)
     plu.add_argument("--owner", default=None)
+    plu.add_argument("--todo-id", default=None)
     plu.set_defaults(func=cmd_loops_update)
 
     pfs = sub.add_parser("focus-start", help="开始一次专注会话")
     pfs.add_argument("--tz", default=tzd)
     pfs.add_argument("--task", required=True)
     pfs.add_argument("--minutes", type=int, default=None)
+    pfs.add_argument("--project", default=None, help="把这次专注挂到某项目（名或 id）")
     pfs.set_defaults(func=cmd_focus_start)
+
+    ppa = sub.add_parser("project-add", help="新建项目")
+    ppa.add_argument("--tz", default=tzd)
+    ppa.add_argument("--name", required=True)
+    ppa.add_argument("--domain", default="research", choices=["research", "work", "personal"])
+    ppa.add_argument("--goal", default=None)
+    ppa.add_argument("--status", default="active", choices=["active", "paused", "done"])
+    ppa.add_argument("--next-milestone", default=None)
+    ppa.set_defaults(func=cmd_project_add)
+
+    ppl = sub.add_parser("project-list", help="列出项目（可按 domain/status 筛）")
+    ppl.add_argument("--domain", default=None, choices=["research", "work", "personal"])
+    ppl.add_argument("--status", default=None, choices=["active", "paused", "done"])
+    ppl.set_defaults(func=cmd_project_list)
+
+    ppu = sub.add_parser("project-update", help="改项目字段（status/goal/milestone/加文档/加人…）")
+    ppu.add_argument("--tz", default=tzd)
+    ppu.add_argument("--id", required=True, help="项目名或 id")
+    ppu.add_argument("--name", default=None)
+    ppu.add_argument("--status", default=None, choices=["active", "paused", "done"])
+    ppu.add_argument("--goal", default=None)
+    ppu.add_argument("--next-milestone", default=None)
+    ppu.add_argument("--domain", default=None, choices=["research", "work", "personal"])
+    ppu.add_argument("--add-doc", default=None)
+    ppu.add_argument("--add-person", default=None)
+    ppu.set_defaults(func=cmd_project_update)
+
+    pps = sub.add_parser("project-status", help="某项目卡在哪：聚合开放循环+专注时长")
+    pps.add_argument("--tz", default=tzd)
+    pps.add_argument("--name", required=True, help="项目名或 id")
+    pps.set_defaults(func=cmd_project_status)
 
     pfst = sub.add_parser("focus-status", help="查看当前专注会话与已用时长")
     pfst.add_argument("--tz", default=tzd)
