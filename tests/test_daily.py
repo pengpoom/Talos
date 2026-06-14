@@ -190,6 +190,39 @@ def test_update_loop_sets_new_fields(tmp_path, monkeypatch):
     assert loops[0]["priority"] == "urgent" and loops[0]["domain"] == "work"
 
 
+def test_add_loop_stores_todo_id():
+    loop = daily.add_loop([], "手填的事", source="飞书Todo手填", created="2026-06-03",
+                          domain="work", todo_id="guid-abc")
+    assert loop["todo_id"] == "guid-abc"
+
+
+def test_add_loop_todo_id_defaults_none():
+    assert daily.add_loop([], "x", source="碎念", created="2026-06-03")["todo_id"] is None
+
+
+def test_load_loops_backfills_todo_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    daily.save_loops([{"id": "o1", "desc": "老条目", "created": "2026-05-30",
+                       "last_nudged": None, "status": "open", "due": None, "source": "碎念"}])
+    assert daily.load_loops()[0]["todo_id"] is None
+
+
+def test_find_by_todo_id():
+    loops = [daily.add_loop([], "a", source="s", created="2026-06-03", todo_id="g1")]
+    daily.add_loop(loops, "b", source="s", created="2026-06-03", todo_id="g2")
+    assert daily.find_by_todo_id(loops, "g2")["desc"] == "b"
+    assert daily.find_by_todo_id(loops, "g9") is None
+    assert daily.find_by_todo_id(loops, None) is None
+
+
+def test_update_loop_sets_todo_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("RESEARCH_HOME", str(tmp_path))
+    loops = []
+    daily.add_loop(loops, "x", source="碎念", created="2026-06-03")
+    daily.update_loop(loops, "o1", todo_id="guid-z")
+    assert loops[0]["todo_id"] == "guid-z"
+
+
 def test_due_for_nudge_priority_sorts_before_created():
     loops = [
         {"id": "o1", "status": "open", "last_nudged": None, "created": "2026-05-30",

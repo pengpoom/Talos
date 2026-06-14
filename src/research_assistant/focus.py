@@ -12,9 +12,9 @@ def load_focus():
     return state.read_json(focus_path(), default=None)
 
 
-def start_focus(task: str, *, started: str, planned_min=None) -> dict:
+def start_focus(task: str, *, started: str, planned_min=None, project=None) -> dict:
     sess = {"active": True, "task": task, "started": started,
-            "planned_min": planned_min, "ended": None}
+            "planned_min": planned_min, "ended": None, "project": project}
     state.atomic_write_json(focus_path(), sess)
     return sess
 
@@ -61,7 +61,8 @@ def end_focus(*, ended: str) -> dict:
     sess["elapsed_min"] = elapsed_minutes(sess["started"], ended)
     state.atomic_write_json(focus_path(), sess)
     append_focus_log({"task": sess["task"], "started": sess["started"],
-                      "ended": ended, "elapsed_min": sess["elapsed_min"]})
+                      "ended": ended, "elapsed_min": sess["elapsed_min"],
+                      "project": sess.get("project")})
     return sess
 
 
