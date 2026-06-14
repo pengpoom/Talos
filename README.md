@@ -2,6 +2,8 @@
 
 在 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 之上的科研搭子：arXiv 论文日报 + 日循环（晨间规划 / 晚间复盘）+ 开放循环巡检 + 专注陪伴。
 
+可只用一个总管 bot，也可再起**科研 / 工作专科 bot**，各有独立人格却共用一个后台——见下「多 bot」一节。
+
 ## 前置
 - 已跑起来的 Hermes（飞书 gateway 能对话）。
 - 已设好飞书 home chat：在飞书对 Hermes 发 `/set-home`。
@@ -58,8 +60,24 @@ arxiv:
 
 新增状态文件：`focus.json`（当前专注会话）、`focus_log.jsonl`（专注历史）。
 
+## 多 bot（科研 / 工作分身，共用一个后台）
+默认装出来的是**单个总管 bot**（跨域规划 / 复盘、单写飞书 Todo）。你还能再起**专科 bot**——科研 bot 只管论文 / 专注 / 科研循环，工作 bot 只管实习 / 项目 / 对外沟通——各有独立人格、技能、飞书账号，但**共用同一个后台**（时间轴 / 开放循环 / 专注 / 项目）：一个 bot 记的进展，别的 bot 读得到。
+
+一条命令起一个专科 bot：
+```bash
+./setup-profile.sh research 研究bot --bot-name 小研 --user-address 老板
+./setup-profile.sh work     工作bot --bot-name 小作 --user-address 老板
+```
+脚本自动：建 Hermes profile → 从本地默认 profile 拷大脑（LLM provider）→ 钉 `RESEARCH_HOME` 共用后台 → 按清单部署技能 → 渲染人格（替换名字 / 称呼）→ 铺记忆脚手架。之后按脚本提示**人工**：建一个独立飞书 app（token 锁不让多 bot 共用一个 app）、填 creds、开 scope、`<name> gateway start`、DM 走配对。
+
+- 模板在 `pack/profiles/<type>/`（人格 / 技能清单 / 记忆脚手架，**全占位、无个人信息**）。
+- 个人数据（creds / 记忆事实 / 带名字的 SOUL）只落 `~/.hermes`，**不进本 repo**。
+- 细节见 `pack/profiles/README.md` 与 `docs/superpowers/plans/2026-06-14-multi-profile-generalization.md`。
+
 ## 目录
 - `src/research_assistant/` — 机械活 Python 包（含单测）
 - `pack/` — 可分发的包（SOUL 人设 / 技能 / 配置模板 / cron 模板）
-- `install.sh` — 装进 `~/.hermes/`
+- `pack/profiles/` — 多 bot 模板（科研 / 工作专科 bot 的人格 / 技能清单 / 记忆脚手架，全占位）
+- `install.sh` — 装进 `~/.hermes/`（总管 bot）
+- `setup-profile.sh` — 一键起一个专科 bot（科研 / 工作）
 - `docs/superpowers/` — 设计 spec 与实施计划
