@@ -1,0 +1,21 @@
+# 工作 bot 技能清单（setup-profile.sh 读这个部署）。
+# 规则：含 "/" 的是自定义技能，从 repo 的 pack/skills/ 拷；
+#       lark-* 从用户默认 profile 的已装 lark 技能拷。
+
+# --- 自定义技能 ---
+work/draft-reply
+work/project-review
+work/meeting-to-actions
+research/open-loop-tracker
+research/project-tracker
+research/focus-buddy
+
+# --- lark 技能（工作要用的子集）---
+lark-shared
+lark-im
+lark-contact
+lark-doc
+lark-minutes
+lark-vc
+lark-calendar
+lark-markdown
