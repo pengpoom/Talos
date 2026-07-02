@@ -19,6 +19,7 @@ metadata:
    - **今日计划及其状态**：`research-assistant loops-list`（今天 `created`=今天、`source`=今日计划 的各域条目，含已 done / 仍 open——**专科 bot（如小研）改过的状态都在这**）。
    - **专注**：`research-assistant focus-stats` / `focus-log`（含小研陪你做的那几段）。
    - **项目**：对在跑项目 `research-assistant project-status --name <项目>` 看推进。
+   - **科研软进展**：今天时间轴里带 `[研究]` 的行（读懂/想通/否了啥）——复盘时念一句，别只盯任务勾没勾。
    - **飞书 Todo（视图）**：用 `lark-task` 读一眼今天分区，主要为下一步**对账**用，别当唯一真相。
    - 可结合 `session_search` 翻今天聊过的进展。
 

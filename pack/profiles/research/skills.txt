@@ -5,10 +5,14 @@
 # --- 自定义技能 ---
 research/paper-reader
 research/paper-library
+research/paper-data-extractor
 research/arxiv-digest
 research/focus-buddy
 research/open-loop-tracker
 research/project-tracker
+research/memory-recall
+research/research-log
+research/lit-review
 
 # --- lark 技能（科研要用的子集）---
 lark-shared

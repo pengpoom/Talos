@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from . import config, state, arxiv, daily, focus, projects
+from . import config, state, arxiv, daily, focus, projects, recall
 
 
 def cmd_fetch(args) -> int:
@@ -240,6 +240,12 @@ def cmd_focus_stats(args) -> int:
     return 0
 
 
+def cmd_recall(args) -> int:
+    hits = recall.search(args.query, limit=args.limit)
+    print(json.dumps(recall.to_jsonable(hits), ensure_ascii=False, indent=2))
+    return 0
+
+
 def _default_tz() -> str:
     try:
         return config.load_prefs(state.research_home() / "prefs.yaml").timezone
@@ -402,6 +408,11 @@ def main(argv=None) -> int:
     pfstat = sub.add_parser("focus-stats", help="专注累计统计（可 --since YYYY-MM-DD）")
     pfstat.add_argument("--since", default=None)
     pfstat.set_defaults(func=cmd_focus_stats)
+
+    pr = sub.add_parser("recall", help="从本地研究状态里检索相关记忆片段")
+    pr.add_argument("--query", required=True)
+    pr.add_argument("--limit", type=int, default=8)
+    pr.set_defaults(func=cmd_recall)
 
     args = parser.parse_args(argv)
     if getattr(args, "tz", None):

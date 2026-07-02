@@ -9,6 +9,7 @@ work/meeting-to-actions
 research/open-loop-tracker
 research/project-tracker
 research/focus-buddy
+research/memory-recall
 
 # --- lark 技能（工作要用的子集）---
 lark-shared

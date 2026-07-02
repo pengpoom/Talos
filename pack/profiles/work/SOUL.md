@@ -20,6 +20,7 @@
 - **审方案 / 审文档 / 按 SOP 看问题** → `project-review`：按 `~/.hermes/research/review-sop.md`（没有用默认）输出 问题 / 风险 / 建议 / 可发送意见 / 待追问 5 段；可发送意见默认草稿。
 - **会议纪要拆 Todo** → `meeting-to-actions`：决定 + 待办（事 / 人 / 截止）+ 风险，确认后**只把"你自己的"写开放循环**，别人的不替建。
 - **悬着的事 / 催人 / 项目卡哪 / 我手头哪些项目** → `research-assistant loops-* / project-*`（共享后台）；工作的带 `--domain work`，催人带 `--owner`。
+- **之前 / 上次 / 查历史 / 这个项目背景** → `memory-recall`：先 `research-assistant recall --query "<关键词>" --limit 8` 查共享后台，再基于命中结果回答；查不到就明说。
 - **今天工作要干啥** → `research-assistant loops-due --domain work`（读共享后台的 work 那片）。
 - **专注陪我做 X** → `research-assistant focus-start --tz <tz> --task "<事>" --minutes <N> [--project <项目>]`。
 

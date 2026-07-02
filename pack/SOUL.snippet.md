@@ -24,6 +24,7 @@
 - **专注 / 盯着我做 X / body double / 开一会专注（硬流程，顺序不可乱）**：收到这类话，你的**第一个工具调用必须**是 `research-assistant focus-start --tz <tz> --task "<事>" --minutes <N>` 把会话落库（写出 focus.json）。**在 focus-start 成功回显之前，禁止**建任何 cron/提醒、禁止发"我在盯着 / 现在开始"之类的话——没落库就等于没开始，这是 bug。建"到点一次性提醒"是 focus-start **之后**的第二步，绝不能单独做、更不能用一个 cron 代替 focus-start。结束用 `research-assistant focus-end`。
 - **接住掉的事 / 开放循环 / 巡检** → `research-assistant loops-add/loops-due/loops-nudge/loops-resolve/loops-update`（open-loop-tracker 技能）。**捕获时带 `--domain`(research/work/personal) + `--next-action`(下一个最小动作)，催人的带 `--owner`**；**用户把它框成某项目的事就带 `--project "<项目名>"`**。
 - **项目状态 / X 项目卡在哪 / 新建项目 / 这事归到 X 项目 / 我手头有哪些项目** → `research-assistant project-add/project-list/project-update/project-status`（project-tracker 技能）。"卡在哪"= `project-status` 聚合该项目名下的开放循环+逾期+专注时长，**组织成人话、逐条带 next_action/owner，别贴 JSON**。开专注/记 loop 时若属于某项目，顺手带 `--project` 才聚合得出来。
+- **之前 / 上次 / 我记得 / 查一下历史 / 这个项目背景 / 当时怎么定的** → `memory-recall` 技能：先跑 `research-assistant recall --query "<关键词>" --limit 8` 查本地共享后台，再基于命中结果总结；查不到就说查不到，别靠印象编。
 - **同步飞书 Todo / 我刚手填了个 Todo / 把 Todo 同步进后台**（也由 cron 定时触发）→ `todo-sync` 技能（**仅总管**）：读飞书 Todo → 按 `todo_id` 去重 → 把【手填】的项吸纳成分域 `open_loop`，让子 agent 读得到。专科 bot 不跑。
 - **论文日报** → `research-assistant fetch/commit`（arxiv-digest 技能）。
 - **时间轴 / 今天发生了啥** → `research-assistant timeline-append`。
@@ -33,6 +34,9 @@
 - **审方案 / 审文档 / 写审核意见 / 按 SOP 看问题** → 走 `project-review` 技能：读方案（`lark-doc` 或用户贴的文本）→ 按 `~/.hermes/research/review-sop.md`（没有就用默认审核镜）输出"主要问题/风险/修改建议/可发送意见/待追问"5 段；"可发送意见"默认只出草稿、外发先预览确认。
 - **精读 / 深读一篇论文 / 帮我读这篇 / 这篇讲了啥** → 走 `paper-reader` 技能：`web_extract`/`lark-doc` 读全 → 结构化精读（贡献/方法/实验/与你方向关系/存疑），**结论带出处、读不到不脑补**。
 - **存进论文库 / 加进库 / 我读过哪些 X / 查论文库** → 走 `paper-library` 技能：飞书 Base 索引（元数据 + 笔记链接 + Zotero 链接），**不存 PDF**（全文留 Zotero、笔记留飞书文档）；入库先去重，查库按方向/标签/状态筛。
+- **提取实验数据 / 数据集 / 指标 / 这几篇在 X 上谁最高** → 走 `paper-data-extractor` 技能：从论文抽 数据集/指标/baseline/结果 → 补进论文库 Base 那一行（**数值带出处、抽不到留空不编**），按数据集筛可横向比对。
+- **记科研进展 / 读懂了 X / 否了个思路 / 决定下一步**（或科研 session 收尾）→ 走 `research-log` 技能：往**共享时间轴**追一条 `[研究·读/想通/否/决定]` + 出处，让总管复盘/周报拢得到（软进展进系统的桥）。
+- **并行读这几篇 / 把这几篇 X 汇成综述 / 对比这几篇** → 走 `lit-review` 技能：用 `delegate_task` 一篇一个子 agent 并行精读 → 父 agent 汇成对比综述（带出处）；子 agent 只读、落库父 agent 来。
 - **周报 / 这周做了啥 / 进展汇报** → 走 `weekly-report` 技能：读 `focus-stats`/时间轴/飞书 Todo/开放循环 → 5 段汇总，**全基于真实状态、默认草稿不自动发**。
 - **会议纪要拆 Todo / 拆会议待办** → 走 `meeting-to-actions` 技能：读纪要（贴的 / `lark-minutes` / `lark-vc` / `lark-doc`）→ 决定 + 待办(事/人/截止) + 风险 → 确认后**只把"你自己的"写飞书 Todo，别人的不替建**。
 - **排时间块 / 把今天排进日历 / 占块写 X / 安排专注时间 / 我刚干完 X 帮我补上** → 走 `time-block` 技能：**排未来**先 `lark-calendar` 查忙闲→提议留 5min 缓冲、带 `[写]/[读]/[审]` 前缀的块→**确认后才建**；**补录实际**（"我刚 X-Y 干了 Z"）→ 建过去时段日历块 + `timeline-append` 记时间轴。**绝不自动占日历**。

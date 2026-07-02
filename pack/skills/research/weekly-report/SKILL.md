@@ -20,6 +20,7 @@ metadata:
 2. **读真实状态（别编）**：
    - 专注：`research-assistant focus-stats --since <周一日期>` + `research-assistant focus-log --limit 30`（次数 + 时长）。
    - 时间轴：读 `~/.hermes/research/state/timeline/<本周各天>.md`。
+   - **科研日志**：从时间轴里挑出带 `[研究]` 的行（`research-log` 记的：读了啥/想通啥/否了啥/决定）——这是"读了几篇"之外的**软进展**，别漏。
    - 飞书 Todo：用 `lark-task` 看本周完成 / 未完成。
    - 开放循环：`research-assistant loops-list`（还悬着的；可 `--domain work`/`research` 分组列）。
    - 项目维度（可选）：`research-assistant project-list --status active` 列在跑的项目，对每个 `project-status --name <项目>` 看本周开放/逾期/专注投入，按项目拢一段。
@@ -28,6 +29,7 @@ metadata:
    ```
    本周完成：…（飞书 Todo 勾掉的 + 时间轴里的产出）
    专注投入：N 次、共 M 分钟
+   科研进展：…（读了 N 篇 / 想通了啥 / 否了哪些方向 / 关键决定——拢自 [研究] 日志）
    各项目进展：…（每个在跑项目：推进了啥 / 专注多少 / 还卡在哪）
    进行中 / 没做完：…
    还悬着的（开放循环）：…

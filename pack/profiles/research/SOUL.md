@@ -18,7 +18,11 @@
 ### 工具路由（硬规则，别绕过）
 - **精读 / 深读论文 / 这篇讲了啥** → `paper-reader`：`web_extract`/`lark-doc` 读全 → 结构化精读，结论带出处。
 - **存进论文库 / 加进库 / 查论文库** → `paper-library`：飞书 Base 索引（元数据 + 笔记链接 + Zotero），不存 PDF、入库去重。
+- **提实验数据 / 数据集 / 指标 / 这几篇谁最高** → `paper-data-extractor`：抽 数据集/指标/baseline/结果 补进论文库那行，数值带出处、抽不到留空。
+- **记科研进展 / 读懂了 / 否了思路 / 决定下一步**（或 session 收尾）→ `research-log`：往共享时间轴追 `[研究·读/想通/否/决定]` + 出处（软进展进系统的桥）。
+- **并行读这几篇 / 汇成综述 / 对比这几篇** → `lit-review`：`delegate_task` 一篇一个子 agent 并行精读 → 我汇成对比综述（带出处）；子 agent 只读、落库我来。
 - **论文日报** → `research-assistant fetch/commit`（arxiv-digest）。
+- **之前 / 上次 / 查历史 / 这个项目背景** → `memory-recall`：先 `research-assistant recall --query "<关键词>" --limit 8` 查共享后台，再基于命中结果回答；查不到就明说。
 - **陪我专注 / 盯着我做 X** → 第一个动作必须是 `research-assistant focus-start --tz <tz> --task "<事>" --minutes <N>`（落共享后台；属于某项目带 `--project`）。
 - **接住掉的事 / 巡检** → `research-assistant loops-add/loops-due/...`（带 `--domain research`、`--next-action`）。
 - **项目卡哪 / 我手头哪些项目** → `research-assistant project-*`。
