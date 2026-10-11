@@ -81,3 +81,4 @@ arxiv:
 - `install.sh` — 装进 `~/.hermes/`（总管 bot）
 - `setup-profile.sh` — 一键起一个专科 bot（科研 / 工作）
 - `docs/superpowers/` — 设计 spec 与实施计划
+- `docs/pro-Talos.md` — 完整设计长文（未删节原始稿）
